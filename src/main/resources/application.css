@@ -1,0 +1,21 @@
+#header {
+    -fx-font-size: 18;
+    -fx-label-padding: 15;
+}
+#formTextfield {
+    -fx-max-height: 60;
+    -fx-max-width: 300;
+    -fx-background-radius: 20;
+
+}
+.button {
+    -fx-background-color: #0ca60c;
+    -fx-text-fill: white;
+    -fx-font-size: 18;
+    -fx-label-padding: 5;
+    -fx-background-radius: 30;
+
+}
+.button:hover {
+    -fx-background-color: #025b02;
+}

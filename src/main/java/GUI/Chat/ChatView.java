@@ -1,4 +1,6 @@
 package GUI.Chat;
 
-public class ChatView {
+import javafx.scene.layout.BorderPane;
+
+public class ChatView extends BorderPane {
 }
