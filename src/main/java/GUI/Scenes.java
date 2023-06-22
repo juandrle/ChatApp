@@ -1,5 +1,5 @@
 package GUI;
 
 public enum Scenes {
-    LOGIN_VIEW
+    LOGIN_VIEW, CHATPARTNER_VIEW
 }

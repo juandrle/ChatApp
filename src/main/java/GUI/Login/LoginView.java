@@ -1,5 +1,6 @@
 package GUI.Login;
 
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -14,7 +15,7 @@ public class LoginView extends BorderPane {
     Button loginButton;
 
     LoginView() {
-        header = new Label("Please input Your Username and Password");
+        header = new Label("Please input your \n username and password");
         header.setId("header");
         username = new TextField();
         username.setId("formTextfield");
@@ -22,9 +23,11 @@ public class LoginView extends BorderPane {
         password.setId("formTextfield");
         loginButton = new Button("Login/Register");
         VBox menu = new VBox(header, username,password,loginButton);
+        menu.setId("mainMenu");
         menu.setSpacing(15);
         menu.setAlignment(Pos.CENTER);
         setCenter(menu);
+        setId("loginScreen");
     }
 
 }

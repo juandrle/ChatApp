@@ -1,5 +1,6 @@
 package GUI;
 
+import GUI.Chatpartner.ChatpartnerViewController;
 import GUI.Login.LoginViewController;
 import Model.Client;
 import javafx.application.Application;
@@ -12,20 +13,24 @@ import java.util.HashMap;
 public class ChatApplication extends Application {
     private Scene scene;
     private HashMap<Scenes, Pane> scenes;
+    Client client;
 
     @Override
     public void init() throws Exception {
         scenes = new HashMap<>();
+        client = new Client();
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         try {
             ViewController<ChatApplication> controller;
-            controller = new LoginViewController(this, new Client());
+            controller = new LoginViewController(this, client);
             scenes.put(Scenes.LOGIN_VIEW, controller.getRootView());
+            controller = new ChatpartnerViewController(this, client);
+            scenes.put(Scenes.CHATPARTNER_VIEW, controller.getRootView());
 
-            Pane root = scenes.get(Scenes.LOGIN_VIEW);
+            Pane root = scenes.get(Scenes.CHATPARTNER_VIEW);
             scene = new Scene(root, 640, 800);
             scene.getStylesheets().add(getClass().getResource("/application.css").toExternalForm());
             primaryStage.setScene(scene);

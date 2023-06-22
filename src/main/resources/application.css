@@ -1,21 +1,53 @@
-#header {
-    -fx-font-size: 18;
-    -fx-label-padding: 15;
+#loginScreen #header {
+    -fx-font-size: 25;
+    -fx-label-padding: 30;
+    -fx-font-weight: bold;
+    -fx-font-family: AppleSystemUIFont;
+    -fx-text-alignment: center;
+    -fx-translate-y: -30;
 }
-#formTextfield {
-    -fx-max-height: 60;
+#loginScreen #formTextfield {
+    -fx-max-height: 45;
+    -fx-pref-height: 45;
     -fx-max-width: 300;
-    -fx-background-radius: 20;
-
+    -fx-background-radius: 50;
 }
-.button {
-    -fx-background-color: #0ca60c;
+#loginScreen #formTextfield:selected {
+    -fx-background-color: black;
+}
+#loginScreen .button {
+    -fx-background-color: #01882f;
     -fx-text-fill: white;
     -fx-font-size: 18;
     -fx-label-padding: 5;
     -fx-background-radius: 30;
+    -fx-pref-width: 200;
+    -fx-translate-y: 30;
 
 }
-.button:hover {
+#loginScreen .button:hover {
+    -fx-background-color: #025b02;
+}
+#loginScreen #mainMenu {
+    -fx-background-radius: 50;
+    -fx-background-color: #ececec;
+    -fx-max-width: 450;
+    -fx-max-height: 500;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 50, 0.5, 0.0, 0.0);
+}
+#chatpartner #background {
+    -fx-background-radius: 50;
+    -fx-background-color: #ececec;
+    -fx-max-width: 450;
+    -fx-max-height: 500;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 50, 0.5, 0.0, 0.0);
+}
+#chatpartner #clientList {
+    -fx-max-height: 400;
+    -fx-max-width: 350;
+    -fx-background-radius: 20;
+}
+#chatpartner #clientList:cell-selection {
     -fx-background-color: #025b02;
 }
