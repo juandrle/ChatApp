@@ -1,5 +1,6 @@
 package GUI;
 
+import GUI.Chat.ChatViewController;
 import GUI.Chatpartner.ChatpartnerViewController;
 import GUI.Login.LoginViewController;
 import Model.Client;
@@ -18,7 +19,7 @@ public class ChatApplication extends Application {
     @Override
     public void init() throws Exception {
         scenes = new HashMap<>();
-        client = new Client();
+        client = new Client(25655, "localhost");
     }
 
     @Override
@@ -29,8 +30,12 @@ public class ChatApplication extends Application {
             scenes.put(Scenes.LOGIN_VIEW, controller.getRootView());
             controller = new ChatpartnerViewController(this, client);
             scenes.put(Scenes.CHATPARTNER_VIEW, controller.getRootView());
+            // for making the style
+            controller = new ChatViewController(this, client);
+            scenes.put(Scenes.CHAT_VIEW, controller.getRootView());
 
-            Pane root = scenes.get(Scenes.CHATPARTNER_VIEW);
+
+            Pane root = scenes.get(Scenes.LOGIN_VIEW);
             scene = new Scene(root, 640, 800);
             scene.getStylesheets().add(getClass().getResource("/application.css").toExternalForm());
             primaryStage.setScene(scene);

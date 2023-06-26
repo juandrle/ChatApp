@@ -1,53 +1,149 @@
 #loginScreen #header {
-    -fx-font-size: 25;
+<!-- --> -fx-font-size: 28;
+    -fx-text-fill: white;
     -fx-label-padding: 30;
     -fx-font-weight: bold;
     -fx-font-family: AppleSystemUIFont;
     -fx-text-alignment: center;
     -fx-translate-y: -30;
 }
+
 #loginScreen #formTextfield {
-    -fx-max-height: 45;
+<!-- --> -fx-max-height: 45;
     -fx-pref-height: 45;
     -fx-max-width: 300;
     -fx-background-radius: 50;
-}
-#loginScreen #formTextfield:selected {
-    -fx-background-color: black;
-}
-#loginScreen .button {
-    -fx-background-color: #01882f;
+    -fx-background-color: #494949;
     -fx-text-fill: white;
-    -fx-font-size: 18;
+    -fx-font-size: 20;
+}
+
+#loginScreen #formTextfield:selected {
+<!-- --> -fx-background-color: black;
+}
+
+#loginScreen .button {
+<!-- --> -fx-background-color: #5da65d;
+    -fx-text-fill: white;
+    -fx-font-size: 21;
     -fx-label-padding: 5;
     -fx-background-radius: 30;
     -fx-pref-width: 200;
     -fx-translate-y: 30;
 
 }
+
 #loginScreen .button:hover {
-    -fx-background-color: #025b02;
+<!-- --> -fx-background-color: #025b02;
 }
+
 #loginScreen #mainMenu {
-    -fx-background-radius: 50;
-    -fx-background-color: #ececec;
+<!-- --> -fx-background-radius: 50;
+    -fx-background-color: #646464;
     -fx-max-width: 450;
     -fx-max-height: 500;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 50, 0.5, 0.0, 0.0);
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.1), 50, 0.5, 0.0, 0.0);
 }
+
+#loginScreen {
+<!-- --> -fx-background-color: #494949;
+}
+
 #chatpartner #background {
-    -fx-background-radius: 50;
-    -fx-background-color: #ececec;
+<!-- --> -fx-background-radius: 50;
+    -fx-background-color: #646464;
     -fx-max-width: 450;
     -fx-max-height: 500;
     -fx-alignment: center;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 50, 0.5, 0.0, 0.0);
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.1), 50, 0.5, 0.0, 0.0);
 }
+
 #chatpartner #clientList {
-    -fx-max-height: 400;
+<!-- --> -fx-max-height: 400;
     -fx-max-width: 350;
     -fx-background-radius: 20;
+    -fx-background-color: #646464;
 }
-#chatpartner #clientList:cell-selection {
+
+#chatpartner #clientCell:cell-selection {
+<!-- --> -fx-background-color: #025b02;
+}
+
+#chatpartner #clientCell {
+<!-- --> -fx-background-color: #646464;
+    -fx-text-fill: white;
+}
+
+#chatpartner {
+<!-- --> -fx-background-color: #494949;
+}
+
+#chat #historyBackground {
+<!-- --> -fx-max-height: 500;
+    -fx-max-width: 600;
+    -fx-pref-width: 500;
+    -fx-background-color: #646464;
+    -fx-background-radius: 20;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.1), 50, 0.5, 0.0, 0.0);
+
+}
+
+#chat #msgHistory {
+    -fx-max-height: 400;
+    -fx-pref-height: 450;
+    -fx-max-width: 500;
+    -fx-background-color: #494949;
+    -fx-border-radius: 20;
+}
+
+#chat {
+    -fx-background-color: #494949;
+    -fx-padding: 30;
+
+}
+
+#chat #msgBackground {
+    -fx-background-color: #646464;
+    -fx-max-width: 600;
+    -fx-max-height: 200;
+    -fx-alignment: bottom-center;
+    -fx-background-radius: 20;
+    -fx-padding: 20;
+    -fx-spacing: 20;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.1), 50, 0.5, 0.0, 0.0);
+}
+
+#chat .button {
+    -fx-alignment: bottom-center;
+    -fx-background-size: 18;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-fit-to-height: true;
+    -fx-fit-to-width: true;
+    -fx-min-width: 50;
+    -fx-background-radius: 20;
+    -fx-background-color: #5da65d;
+
+}
+
+#chat #messageArea {
+    -fx-control-inner-background: #494949;
+    -fx-text-fill: white;
+    -fx-font-size: 18;
+    -fx-max-height: 100;
+}
+
+#chat .button:hover {
     -fx-background-color: #025b02;
+}
+#chat #sendMsgButton {
+    -fx-background-image: url("send-icon.png");
+}
+#chat #sendDataButton {
+    -fx-background-image: url("data.png");
+}
+#chat #sendBox {
+    -fx-alignment: bottom-center;
+    -fx-spacing: 15;
 }

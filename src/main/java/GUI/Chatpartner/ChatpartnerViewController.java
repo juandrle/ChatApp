@@ -1,6 +1,7 @@
 package GUI.Chatpartner;
 
 import GUI.ChatApplication;
+import GUI.Scenes;
 import GUI.ViewController;
 import Model.Client;
 import javafx.scene.control.Button;
@@ -29,9 +30,13 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
             @Override
             protected void updateItem(Client item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(hBox);
+                setId("clientCell");
                 if (!empty) {
                     username.setText("input getter here");
+                    connect.setOnAction(e -> {
+                        // hier die Connection zu anderen Client aufbauen
+                        application.switchScene(Scenes.LOGIN_VIEW);
+                    });
                     setGraphic(hBox);
 
                 }

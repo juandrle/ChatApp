@@ -41,7 +41,6 @@ public class Client {
             e.printStackTrace();
         }
 
-
     }
 
     public void startChatProtocol(String port, String ip){
