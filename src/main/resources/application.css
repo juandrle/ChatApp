@@ -1,5 +1,5 @@
 #loginScreen #header {
-<!-- --> -fx-font-size: 28;
+    -fx-font-size: 28;
     -fx-text-fill: white;
     -fx-label-padding: 30;
     -fx-font-weight: bold;
@@ -9,7 +9,7 @@
 }
 
 #loginScreen #formTextfield {
-<!-- --> -fx-max-height: 45;
+    -fx-max-height: 45;
     -fx-pref-height: 45;
     -fx-max-width: 300;
     -fx-background-radius: 50;
@@ -19,11 +19,11 @@
 }
 
 #loginScreen #formTextfield:selected {
-<!-- --> -fx-background-color: black;
+    -fx-background-color: black;
 }
 
 #loginScreen .button {
-<!-- --> -fx-background-color: #5da65d;
+    -fx-background-color: #5da65d;
     -fx-text-fill: white;
     -fx-font-size: 21;
     -fx-label-padding: 5;
@@ -34,11 +34,11 @@
 }
 
 #loginScreen .button:hover {
-<!-- --> -fx-background-color: #025b02;
+    -fx-background-color: #025b02;
 }
 
 #loginScreen #mainMenu {
-<!-- --> -fx-background-radius: 50;
+    -fx-background-radius: 50;
     -fx-background-color: #646464;
     -fx-max-width: 450;
     -fx-max-height: 500;
@@ -46,11 +46,11 @@
 }
 
 #loginScreen {
-<!-- --> -fx-background-color: #494949;
+    -fx-background-color: #494949;
 }
 
 #chatpartner #background {
-<!-- --> -fx-background-radius: 50;
+    -fx-background-radius: 50;
     -fx-background-color: #646464;
     -fx-max-width: 450;
     -fx-max-height: 500;
@@ -59,27 +59,27 @@
 }
 
 #chatpartner #clientList {
-<!-- --> -fx-max-height: 400;
+    -fx-max-height: 400;
     -fx-max-width: 350;
     -fx-background-radius: 20;
     -fx-background-color: #646464;
 }
 
 #chatpartner #clientCell:cell-selection {
-<!-- --> -fx-background-color: #025b02;
+    -fx-background-color: #025b02;
 }
 
 #chatpartner #clientCell {
-<!-- --> -fx-background-color: #646464;
+    -fx-background-color: #646464;
     -fx-text-fill: white;
 }
 
 #chatpartner {
-<!-- --> -fx-background-color: #494949;
+    -fx-background-color: #494949;
 }
 
 #chat #historyBackground {
-<!-- --> -fx-max-height: 500;
+    -fx-max-height: 500;
     -fx-max-width: 600;
     -fx-pref-width: 500;
     -fx-background-color: #646464;

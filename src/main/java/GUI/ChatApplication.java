@@ -40,6 +40,7 @@ public class ChatApplication extends Application {
             scene.getStylesheets().add(getClass().getResource("/application.css").toExternalForm());
             primaryStage.setScene(scene);
             primaryStage.show();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
