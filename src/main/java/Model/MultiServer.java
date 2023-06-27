@@ -22,14 +22,10 @@ public class MultiServer {
         multiServer.serverLoop();
     }
 
-
-
-
     void serverLoop() throws IOException{
         int port = 25656;
 
         ServerSocket serverSocket = new ServerSocket(port);
-
 
         while(true){
             Socket client = warteAufAnmeldung(serverSocket);
@@ -40,179 +36,153 @@ public class MultiServer {
             clientHandler.start();
         }
 
-
-
-
-
     }
-
 
 
     Socket warteAufAnmeldung(ServerSocket serverSocket) throws IOException{
         Socket socket = serverSocket.accept();
-
-
         System.out.print(socket.getInetAddress().toString()+ " "+ socket.getPort() + " connected");
         return socket;
     }
 
 
 
-    class ClientHandler extends Thread{
+    class ClientHandler extends Thread {
         Socket clientSocket;
-
         boolean isInList = false;
         String userData;
         String username;
         String password;
         String line;
         String nachricht = null;
-        List<Socket> clientSockets;
-        String clientsConnected = "";
 
 
-        public int i =0;
+
         public ClientHandler(Socket clientSocket) throws IOException {
 
             this.clientSocket = clientSocket;
             //this.clientSockets  = sockets;
             //clientSockets.add(clientSocket);
             //System.out.println(clientSockets);
-            i++;
 
         }
 
         @Override
-        public void run(){
-            int count = 0;
+        public void run() {
 
-            try{
+            try {
                 DataInputStream dataIn = new DataInputStream(clientSocket.getInputStream());
-                BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/Accounts.csv"));
-                BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/Accounts.csv", true));
-
-                while(true) {
+                while (true) {
                     nachricht = dataIn.readUTF();
-                    System.out.println("CLIENT MESSAGE: " + nachricht);
-                    switch (count) {
-                        case 0 -> {
+                    String cmd = nachricht.split(":")[0].trim();
+                    nachricht = nachricht.split(":")[1];
+                    System.out.println("CLIENT MESSAGE: " + cmd + nachricht);
+                    switch (cmd) {
+                        case "LOGIN" -> {
                             userData = nachricht;
                             username = userData.split(";")[0];
-                            password = userData.split(";")[1];
-                            while ((line = reader.readLine()) != null) {
-                                if (username.equals(line.split(";")[0])) {
-                                    isInList = true;
-                                    break;
-                                }
-                            }
-                            if (!isInList) {
-                                writer.write(username + ";" + password + "\n");
-                                System.out.println("gesendet regnew"+ username + password);
-                                schreibeNachricht(clientSocket, "REG_NEW");
+                            password = nachricht.split(";")[1];
+                            schreibeNachricht(clientSocket, login(username, password));
+                            updateAllClients();
 
-
-                                writer.close();
-
-                                usernameClientMap.put(username, this);
-                                count++;
-
-                            }else{
-                                if (password.equals(line.split(";")[1])) {
-                                    schreibeNachricht(clientSocket, "REG_OK");
-                                    writer.close();
-                                    usernameClientMap.put(username, this);
-                                    count++;
-
-                                }else{
-
-                                    reader = new BufferedReader(new FileReader("src/main/resources/Accounts.csv"));
-                                    schreibeNachricht(clientSocket, "PASSWORD_INVALID");
-
-
-                                }
-                            }
-
-
-
-
-                        } case 2 ->{
-
-
-                            if(clientsConnected.contains(nachricht)){
-
+                        }
+                        case "CONNECT" -> {
+                            if (getClientsConnected().contains(nachricht)) {
                                 wantedSocket = usernameClientMap.get(nachricht).clientSocket;
                                 requestUser = clientSocket;
 
                                 schreibeNachricht(wantedSocket, "CHAT_REQUEST");
                                 System.out.println("SEND  REQUEST");
-                                count=4;
 
-                            }else{
+                            } else {
                                 System.out.println("USER NOT FOUND");
                                 schreibeNachricht(clientSocket, "USER_NOT_FOUND");
                             }
-
-                        } case 3 ->{
-
-
-
-
                         }
-                        default ->{
-                            if(nachricht.equals("GET_CLIENTS")) {
-                                clientsConnected = "CLIENT_LIST ";
-                                for (Object i : usernameClientMap.keySet()) {
-                                    if (i != null) clientsConnected += i + " ";
-
-
-                                }
-                                schreibeNachricht(clientSocket, clientsConnected);
-                                count = 2;
-                                System.out.println(clientsConnected);
-                            }
-
-
-
-                            if(nachricht.split(" ")[0].equals("REQUEST_ACCEPTED")){
-                                schreibeNachricht(requestUser, "REQUEST_ACCEPTED");
-                                schreibeNachricht(requestUser,nachricht.split(" ")[1]+ ";" + wantedSocket.getInetAddress());
-
-                            }else if(nachricht.equals("REQUEST_DENIED")){
-
-                                schreibeNachricht(requestUser,"REQUEST_DENIED");
-
-                            }
+                        case "GET_CLIENTS" -> {
+                            schreibeNachricht(clientSocket, getClientsConnected());
+                            System.out.println(getClientsConnected());
+                        }
+                        case "REQUEST_ACCEPTED" -> {
+                            schreibeNachricht(requestUser, "REQUEST_ACCEPTED");
+                            schreibeNachricht(requestUser, nachricht.split(" ")[1] + ";" + wantedSocket.getInetAddress());
+                        }
+                        case "REQUEST_DENIED" -> {
+                            schreibeNachricht(requestUser, "REQUEST_DENIED");
+                        }
+                        case "EXIT" -> {
+                            clients.remove(clientSocket);
+                            System.out.println("DISCONNECTED");
+                            updateAllClients();
+                            clientSocket.close();
+                        }
+                        default -> {
 
 
                         }
                     }
-
-
-
-                    System.out.println(count);
-                    if (nachricht.equalsIgnoreCase("exit")) {
-                        clientSocket.close();
-                        System.out.println("Disconnected from the server");
-                        break;
-                    }
-
-
-
                 }
 
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
 
-        void schreibeNachricht(Socket socket, String nachricht) throws IOException{
-            PrintWriter printWriter= new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+        void schreibeNachricht(Socket socket, String nachricht) throws IOException {
+            PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             printWriter.print(nachricht + "\n");
             printWriter.flush();
         }
 
+        public String login(String username, String password) throws IOException {
+            BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/Accounts.csv"));
+            BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/Accounts.csv", true));
+
+
+            while ((line = reader.readLine()) != null) {
+                if (username.equals(line.split(";")[0])) {
+                    isInList = true;
+                    break;
+                }
+            }
+            if (!isInList) {
+                writer.write(username + ";" + password + "\n");
+                System.out.println("gesendet regnew" + username + password);
+                writer.close();
+                usernameClientMap.put(username, this);
+                return "REG_NEW";
+
+
+            } else if (isInList) {
+                if (password.equals(line.split(";")[1])) {
+                    writer.close();
+                    usernameClientMap.put(username, this);
+                    return "REG_OK";
+
+
+                } else {
+                    reader = new BufferedReader(new FileReader("src/main/resources/Accounts.csv"));
+                    return "PASSWORD_INVALID";
+
+                }
+            }
+            return "FEHLER";
+        }
+
+        String getClientsConnected() {
+            String clientsConnected = "CLIENT_LIST ";
+            for (Object i : usernameClientMap.keySet()) {
+                if (i != null) clientsConnected += i + " ";
+            }
+            return clientsConnected;
+        }
+
+        void updateAllClients() throws IOException {
+
+            for (ClientHandler x : clients) {
+                x.schreibeNachricht(x.clientSocket, getClientsConnected());
+            }
+        }
     }
-
-
 }
