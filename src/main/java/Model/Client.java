@@ -24,6 +24,7 @@ public class Client {
     byte buffer[] = new byte[65000];
     Socket socket;
     int port;
+    String serverMessageArray[];
 
     String address;
     InetAddress partnerAddress;
@@ -36,7 +37,6 @@ public class Client {
     String serverMesage;
 
     public Client(int port, String address) {
-
 
         this.port = port;
         this.address = address;
@@ -109,7 +109,7 @@ public class Client {
 
     public void sendMessage(String msg) {
         byte[] messageBytes;
-
+        msg = username + ": " + msg;
         messageBytes = msg.getBytes();
         try {
             int maxPacketSize = udpSocket.getSendBufferSize() - 4;
@@ -117,6 +117,7 @@ public class Client {
             System.out.println("TOTAL PACKETS: " + totalPackets + " MAXPACKETSIZE: " + maxPacketSize + " MESSAGEBYTES: " + messageBytes);
             buffer = Integer.toString(totalPackets).getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, packetAddress, packetPort);
+            message.add(new Message(this.username, msg.split(":")[1]));
             udpSocket.send(packet);
 
             //buffer = msg.getBytes();
@@ -138,6 +139,37 @@ public class Client {
         }
 
 
+    }
+
+    public boolean einloggen(String username, String password) throws IOException, InterruptedException {
+        this.password = password;
+        this.username = username;
+        DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+
+        String userData = username + ";" + password;
+        dataOut.writeUTF(userData);
+
+        switch (leseNachricht(socket).strip()) {
+            case "REG_OK" -> {
+                System.out.println("Du bist mit dem Server verbunden!");
+                dataOut.writeUTF("GET_CLIENTS");
+                clientLoop();
+                return true;
+            }
+            case "PASSWORD_INVALID" -> {
+                System.out.println("Passwort falsch bitte neu versuchen!");
+                System.out.println(userData);
+                return false;
+            }
+            case "REG_NEW" -> {
+                System.out.println("Du wurdest als neue Benutzer angemeldet");
+                dataOut.writeUTF("GET_CLIENTS");
+                clientLoop();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static void main(String args[]) {
@@ -204,10 +236,17 @@ public class Client {
 
                     try {
                         while (true) {
+                            serverMessageArray = leseNachricht(socket).split(" ");
 
-                            serverMesage = leseNachricht(socket).strip();
+                            serverMesage = serverMessageArray[0];
+                            serverMessageArray[0] = "";
                             System.out.println("RECEIVED FROM SERVER: " + serverMesage);
-                            switch (serverMesage) {
+                            switch (serverMesage.trim()) {
+                                case "CLIENT_LIST":
+                                    clients.addAll(Arrays.asList(serverMessageArray).subList(1, serverMessageArray.length));
+                                    System.out.println(clients);
+                                    break;
+
                                 case "REQUEST_ACCEPTED":
                                     System.out.println("starting chat!");
                                     serverMesage = leseNachricht(socket);
@@ -230,9 +269,11 @@ public class Client {
 
                                 case "USER_NOT_FOUND":
                                     System.out.println("Benutzer nicht gefunden, bitte erneut eingeben!");
+                                    break;
 
                                 case "REQUEST_DENIED":
                                     System.out.println("ABGELEHNT");
+                                    break;
 
                                 default:
                                     System.out.println(serverMesage);

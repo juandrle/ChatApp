@@ -23,6 +23,8 @@ public class MultiServer {
     }
 
 
+
+
     void serverLoop() throws IOException{
         int port = 25656;
 
@@ -108,9 +110,11 @@ public class MultiServer {
                                 System.out.println("gesendet regnew"+ username + password);
                                 schreibeNachricht(clientSocket, "REG_NEW");
 
+
                                 writer.close();
 
                                 usernameClientMap.put(username, this);
+                                count++;
 
                             }else{
                                 if (password.equals(line.split(";")[1])) {
@@ -141,9 +145,10 @@ public class MultiServer {
 
                                 schreibeNachricht(wantedSocket, "CHAT_REQUEST");
                                 System.out.println("SEND  REQUEST");
-                                count++;
+                                count=4;
 
                             }else{
+                                System.out.println("USER NOT FOUND");
                                 schreibeNachricht(clientSocket, "USER_NOT_FOUND");
                             }
 
@@ -155,6 +160,7 @@ public class MultiServer {
                         }
                         default ->{
                             if(nachricht.equals("GET_CLIENTS")) {
+                                clientsConnected = "CLIENT_LIST ";
                                 for (Object i : usernameClientMap.keySet()) {
                                     if (i != null) clientsConnected += i + " ";
 
@@ -162,7 +168,7 @@ public class MultiServer {
                                 }
                                 schreibeNachricht(clientSocket, clientsConnected);
                                 count = 2;
-                                System.out.println("default");
+                                System.out.println(clientsConnected);
                             }
 
 
