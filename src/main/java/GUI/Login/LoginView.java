@@ -1,5 +1,7 @@
 package GUI.Login;
 
+import GUI.AlertPane;
+import GUI.Options.OptionsView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -14,6 +16,7 @@ public class LoginView extends BorderPane {
     TextField username;
     PasswordField password;
     Button loginButton;
+    AlertPane alertPane;
 
     LoginView() {
         header = new Label("Please input your \n username and password");
@@ -27,6 +30,9 @@ public class LoginView extends BorderPane {
         menu.setId("mainMenu");
         menu.setSpacing(15);
         menu.setAlignment(Pos.CENTER);
+        alertPane = new AlertPane();
+        setBottom(alertPane);
+        alertPane.setTranslateY(alertPane.getPrefHeight() + 1);
         setCenter(menu);
         setId("loginScreen");
     }

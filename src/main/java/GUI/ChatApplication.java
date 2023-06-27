@@ -4,6 +4,7 @@ import GUI.Chat.ChatViewController;
 import GUI.Chatpartner.ChatpartnerViewController;
 import GUI.Login.LoginViewController;
 import Model.Client;
+import Model.MultiServer;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
@@ -19,7 +20,7 @@ public class ChatApplication extends Application {
     @Override
     public void init() throws Exception {
         scenes = new HashMap<>();
-        client = new Client(25655, "localhost");
+        client = new Client(25656, "localhost");
     }
 
     @Override
@@ -28,12 +29,9 @@ public class ChatApplication extends Application {
             ViewController<ChatApplication> controller;
             controller = new LoginViewController(this, client);
             scenes.put(Scenes.LOGIN_VIEW, controller.getRootView());
-            controller = new ChatpartnerViewController(this, client);
-            scenes.put(Scenes.CHATPARTNER_VIEW, controller.getRootView());
             // for making the style
             controller = new ChatViewController(this, client);
             scenes.put(Scenes.CHAT_VIEW, controller.getRootView());
-
 
             Pane root = scenes.get(Scenes.LOGIN_VIEW);
             scene = new Scene(root, 640, 800);
@@ -53,6 +51,10 @@ public class ChatApplication extends Application {
             nextScene = scenes.get(sceneName);
             scene.setRoot(nextScene);
         }
+    }
+
+    public HashMap<Scenes, Pane> getScenes() {
+        return scenes;
     }
 
     public static void main(String[] args) {

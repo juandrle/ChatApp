@@ -1,9 +1,11 @@
 package GUI.Chat;
 
 import GUI.ChatApplication;
+import GUI.Options.OptionsViewController;
 import GUI.ViewController;
 import Model.Client;
 import Model.Message;
+import javafx.collections.ListChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
@@ -11,17 +13,20 @@ import javafx.scene.layout.VBox;
 public class ChatViewController extends ViewController<ChatApplication> {
     Client client;
     ChatView view;
+    OptionsViewController optionsViewController;
     public ChatViewController(ChatApplication application, Client client) {
         super(application);
         this.client = client;
         rootView = new ChatView();
         view = (ChatView) rootView;
+        optionsViewController = new OptionsViewController(application, client);
         initialize();
 
     }
 
     @Override
     public void initialize() {
+        view.setTop(optionsViewController.getView());
         // hier send Message funktion
        // view.sendButton.setOnAction(e -> );
         view.messageHistory.setCellFactory(e -> new ListCell<>(){
@@ -38,6 +43,13 @@ public class ChatViewController extends ViewController<ChatApplication> {
                     setGraphic(vBox);
                 }
             }
+        });
+        client.getMessage().addListener((ListChangeListener<? super Message>) c -> {
+            view.messageHistory.setItems(client.getMessage());
+        });
+        view.sendMsgButton.setOnAction(e -> {
+            client.sendMessage(view.messageArea.getText());
+            view.messageArea.clear();
         });
     }
 }

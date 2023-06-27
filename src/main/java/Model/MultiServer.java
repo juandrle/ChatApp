@@ -24,7 +24,7 @@ public class MultiServer {
 
 
     void serverLoop() throws IOException{
-        int port = 25655;
+        int port = 25656;
 
         ServerSocket serverSocket = new ServerSocket(port);
 

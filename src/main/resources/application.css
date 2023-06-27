@@ -28,7 +28,7 @@
 }
 
 #loginScreen #formTextfield:selected {
-    -fx-background-color: black;
+    -fx-background-color: #5da65d;
 }
 
 #loginScreen .button {
@@ -55,7 +55,9 @@
 }
 
 #loginScreen {
-    -fx-background-color: #494949;
+    -fx-background-image: url("310522.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover;
 }
 
 #chatpartner #background {
@@ -84,7 +86,10 @@
 }
 
 #chatpartner {
-    -fx-background-color: #494949;
+    -fx-background-image: url("310522.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover;
+    -fx-background-position: center;
 }
 
 #chat #historyBackground {
@@ -98,16 +103,10 @@
 
 }
 
-#chat #msgHistory {
-    -fx-max-height: 400;
-    -fx-pref-height: 450;
-    -fx-max-width: 500;
-    -fx-background-color: #494949;
-    -fx-border-radius: 20;
-}
-
 #chat {
-    -fx-background-color: #494949;
+    -fx-background-image: url("310522.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover;
     -fx-padding: 30;
 
 }
@@ -116,7 +115,6 @@
     -fx-background-color: #646464;
     -fx-max-width: 600;
     -fx-max-height: 200;
-    -fx-alignment: bottom-center;
     -fx-background-radius: 20;
     -fx-padding: 20;
     -fx-spacing: 20;
@@ -124,7 +122,6 @@
 }
 
 #chat .button {
-    -fx-alignment: bottom-center;
     -fx-background-size: 18;
     -fx-background-repeat: no-repeat;
     -fx-background-position: center;
@@ -146,6 +143,7 @@
 #chat .button:hover {
     -fx-background-color: #025b02;
 }
+
 #chat #sendMsgButton {
     -fx-background-image: url("send-icon.png");
 }
@@ -153,6 +151,32 @@
     -fx-background-image: url("data.png");
 }
 #chat #sendBox {
-    -fx-alignment: bottom-center;
+    -fx-alignment: baseline-center;
     -fx-spacing: 15;
+}
+#chat #msgHistory {
+    -fx-max-height: 400;
+    -fx-pref-height: 450;
+    -fx-max-width: 500;
+    -fx-background-color: #494949;
+    -fx-border-radius: 20;
+}
+#menubar {
+    -fx-background-color: rgba(20, 20, 20, 0.5);
+    -fx-padding: 5;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: white;
+}
+#menubar #menu {
+    -fx-text-fill: white;
+    -fx-background-color: rgba(20, 20, 20, 0.5);
+}
+#menubar #menu:hover {
+    -fx-background-color: #5da65d;
+}
+.menu .label, .menu-item .label {
+    -fx-text-fill: white;
+}
+.context-menu {
+    -fx-background-color: rgba(20, 20, 20, 0.5);
 }

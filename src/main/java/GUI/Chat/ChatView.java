@@ -1,7 +1,6 @@
 package GUI.Chat;
 
 import Model.Message;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -30,10 +29,12 @@ public class ChatView extends BorderPane {
         sendBox.setId("sendBox");
         HBox messageBox = new HBox(messageArea, sendBox);
         messageBox.setId("msgBackground");
+        VBox centering = new VBox(messageBox);
         VBox msgHistory = new VBox(messageHistory);
         msgHistory.setId("historyBackground");
         setCenter(msgHistory);
-        setBottom(messageBox);
+        setBottom(centering);
+        centering.setAlignment(Pos.CENTER);
 
         setId("chat");
 
