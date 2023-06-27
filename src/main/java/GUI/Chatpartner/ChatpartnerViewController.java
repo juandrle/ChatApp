@@ -19,6 +19,7 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
         this.client = client;
         rootView = new ChatpartnerView();
         view = (ChatpartnerView) rootView;
+        initialize();
     }
 
     @Override

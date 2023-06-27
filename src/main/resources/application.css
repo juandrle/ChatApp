@@ -17,6 +17,15 @@
     -fx-text-fill: white;
     -fx-font-size: 20;
 }
+#loginScreen #formPasswordfield {
+    -fx-max-height: 45;
+    -fx-pref-height: 45;
+    -fx-max-width: 300;
+    -fx-background-radius: 50;
+    -fx-background-color: #494949;
+    -fx-text-fill: white;
+    -fx-font-size: 15;
+}
 
 #loginScreen #formTextfield:selected {
     -fx-background-color: black;

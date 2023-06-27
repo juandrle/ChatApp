@@ -16,6 +16,7 @@ public class ChatViewController extends ViewController<ChatApplication> {
         this.client = client;
         rootView = new ChatView();
         view = (ChatView) rootView;
+        initialize();
 
     }
 

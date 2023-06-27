@@ -14,13 +14,14 @@ public class LoginViewController extends ViewController<ChatApplication> {
         this.client = client;
         rootView = new LoginView();
         view = (LoginView) rootView;
+        initialize();
     }
 
     @Override
     public void initialize() {
 
         view.loginButton.setOnAction(e -> {
-
+            System.out.println("LoginButton pressed");
             // implement check to Server here if Username and Password are right from MultiServerMethod
             System.out.println(view.username.getText() + " " + view.password.getText());
             if (view.username.getText().isBlank() || view.password.getText().isBlank()) {
