@@ -114,9 +114,9 @@ public class Client {
         messageBytes = msg.getBytes();
         try {
             int maxPacketSize = udpSocket.getSendBufferSize() - 4;
+            buffer = new byte[maxPacketSize];
             int totalPackets = (int) Math.ceil((double) messageBytes.length / maxPacketSize);
             System.out.println("TOTAL PACKETS: " + totalPackets + " MAXPACKETSIZE: " + maxPacketSize + " MESSAGEBYTES: " + messageBytes);
-            buffer = Integer.toString(totalPackets).getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, packetAddress, packetPort);
             message.add(new Message(this.username, msg.split(":")[1]));
             udpSocket.send(packet);
