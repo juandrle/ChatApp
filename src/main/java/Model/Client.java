@@ -3,7 +3,6 @@ package Model;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.chart.PieChart;
 
 import java.io.*;
 import java.net.Socket;
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
 
@@ -64,7 +62,7 @@ public class Client {
                 msg = "-connection:established--";
                 message.add(new Message(this.username, msg));
                 System.out.println(msg);
-                buffer = msg.getBytes();
+                //buffer = msg.getBytes();
 
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, partnerAddress, Integer.parseInt(port));
                 udpSocket.send(packet);
@@ -82,14 +80,13 @@ public class Client {
 
     public void startChatProtocol() {
         buffer = new byte[65000];
-        Thread receiveMessages = new Thread(this::receiveMessage);
+        Thread receiveMessages = new Thread(this::receiveClientMessage);
         receiveMessages.start();
     }
 
-    public void receiveMessage() {
+    public void receiveClientMessage() {
         try {
             while (true) {
-
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 udpSocket.receive(packet);
                 packetPort = packet.getPort();
@@ -107,7 +104,11 @@ public class Client {
 
     }
 
-    public void sendMessage(String msg) {
+    public void sendClientFile(File file){
+
+    }
+
+    public void sendClientMessage(String msg) {
         byte[] messageBytes;
         msg = username + ": " + msg;
         messageBytes = msg.getBytes();
@@ -138,7 +139,6 @@ public class Client {
 
         }
 
-
     }
 
     public boolean einloggen(String username, String password) throws IOException, InterruptedException {
@@ -146,13 +146,14 @@ public class Client {
         this.username = username;
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
 
-        String userData ="LOGIN: "+ username + ";" + password;
-        dataOut.writeUTF(userData);
+        String userData ="LOGIN "+ username + ";" + password;
+        sendServerMessage(userData);
 
-        switch (leseNachricht(socket).strip()) {
+        switch (getServerMessage(socket).strip()) {
             case "REG_OK" -> {
                 System.out.println("Du bist mit dem Server verbunden!");
-                dataOut.writeUTF("GET_CLIENTS");
+                //dataOut.writeUTF("GET_CLIENTS");
+                sendServerMessage("GET_CLIENTS");
                 clientLoop();
                 return true;
             }
@@ -163,7 +164,8 @@ public class Client {
             }
             case "REG_NEW" -> {
                 System.out.println("Du wurdest als neue Benutzer angemeldet");
-                dataOut.writeUTF("GET_CLIENTS");
+                //dataOut.writeUTF("GET_CLIENTS");
+                sendServerMessage("GET_CLIENTS");
                 clientLoop();
                 return true;
             }
@@ -175,174 +177,162 @@ public class Client {
     public static void main(String args[]) {
         Client client = new Client(25655, "localhost");
         try {
-
             client.clientLoop();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     public void clientLoop() throws IOException {
 
-        DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        Thread serverMessageHandler = new Thread(this::serverMessageHandler);
+        serverMessageHandler.start();
+        Thread userInputHandler = new Thread(this::userInputHandler);
+        userInputHandler.start();
 
-//        boolean registerd = false;
-//        try {
-//            System.out.println("Geben sie ihren Username ein!");
-//
-//            username = bufferedReader.readLine();
-//            System.out.println("Geben sie ihr Passwort ein!");
-//            password = bufferedReader.readLine();
-//            System.out.println(username);
-//            System.out.println(password);
-//
-//            String userData = username + ";" + password;
-//            dataOut.writeUTF(userData);
-//
-//
-//            if (!registerd) {
-//                while (!registerd) {
-//                    switch (leseNachricht(socket).strip()) {
-//                        case "REG_OK":
-//                            System.out.println("Du bist mit dem Server verbunden!");
-//
-//                            registerd = true;
-//                            break;
-//
-//
-//                        case "PASSWORD_INVALID":
-//                            System.out.println("Passwort falsch bitte neu versuchen!");
-//                            password = bufferedReader.readLine();
-//                            userData = username + ";" + password;
-//                            dataOut.writeUTF(userData);
-//                            System.out.println(userData);
-//                            break;
-//
-//
-//                        case "REG_NEW":
-//                            System.out.println("Du wurdest als neue Benutzer angemeldet");
-//                            registerd = true;
-//
-//
-//                    }
-//                }
-//           }
+    }
 
 
-                Thread serverMessageHandler = new Thread(() -> {
+    public void serverMessageHandler(){
+        try {
+            while (true) {
+                serverMessageArray = getServerMessage(socket).split(" ");
+                serverMesage = serverMessageArray[0];
+                serverMessageArray[0] = "";
+                System.out.println("RECEIVED FROM SERVER: " + serverMesage);
+                switch (serverMesage.trim()) {
+                    case "CLIENT_LIST":
+                        clients.clear();
+                        clients.addAll(Arrays.asList(serverMessageArray).subList(1, serverMessageArray.length));
+                        System.out.println(clients);
+                        break;
 
-                    try {
-                        while (true) {
-                            serverMessageArray = leseNachricht(socket).split(" ");
+                    case "REQUEST_ACCEPTED":
+                        System.out.println("starting chat!");
+                        serverMesage = getServerMessage(socket);
+                        String chatPartnerPort = serverMesage.split(";")[0];
+                        String chatPartnerIP = serverMesage.split(";")[1];
 
-                            serverMesage = serverMessageArray[0];
-                            serverMessageArray[0] = "";
-                            System.out.println("RECEIVED FROM SERVER: " + serverMesage);
-                            switch (serverMesage.trim()) {
-                                case "CLIENT_LIST":
-                                    clients.addAll(Arrays.asList(serverMessageArray).subList(1, serverMessageArray.length));
-                                    System.out.println(clients);
-                                    break;
-
-                                case "REQUEST_ACCEPTED":
-                                    System.out.println("starting chat!");
-                                    serverMesage = leseNachricht(socket);
-                                    String chatPartnerPort = serverMesage.split(";")[0];
-                                    String chatPartnerIP = serverMesage.split(";")[1];
-
-                                    startChatProtocol(chatPartnerPort, chatPartnerIP);
-                                    break;
+                        startChatProtocol(chatPartnerPort, chatPartnerIP);
+                        break;
 
 
-                                case "CHAT_REQUEST":
-                                    System.out.println("Chat Einladung erhalten! y: zum akzeptieren ODER n: zum ablehnen!");
-                                    requestReceived.set(true);
-                                    udpSocket = new DatagramSocket();
-                                    dataOut.writeUTF("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
-                                    System.out.println("Starting chat!");
-                                    startChatProtocol();
+                    case "CHAT_REQUEST":
+                        System.out.println("Chat Einladung erhalten! y: zum akzeptieren ODER n: zum ablehnen!");
+                        requestReceived.set(true);
+                        udpSocket = new DatagramSocket();
+                        //dataOut.writeUTF("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
+                        sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
+                        System.out.println("Starting chat!");
+                        startChatProtocol();
 
-                                    break;
+                        break;
 
-                                case "USER_NOT_FOUND":
-                                    System.out.println("Benutzer nicht gefunden, bitte erneut eingeben!");
-                                    break;
+                    case "USER_NOT_FOUND":
+                        System.out.println("Benutzer nicht gefunden, bitte erneut eingeben!");
+                        break;
 
-                                case "REQUEST_DENIED":
-                                    System.out.println("ABGELEHNT");
-                                    break;
+                    case "REQUEST_DENIED":
+                        System.out.println("ABGELEHNT");
+                        break;
 
-                                default:
-                                    System.out.println(serverMesage);
-                            }
+                    default:
+                        System.out.println(serverMesage);
+                }
+            }
+        }catch(IOException e){e.printStackTrace();}
+    }
+
+    public void userInputHandler(){
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+            while (true) {
+                String eingabe[] = bufferedReader.readLine().split(" ");
+                switch (eingabe[0]) {
+                    case "!clients":
+                        sendServerMessage("GET_CLIENTS");
+                        break;
+
+                    case "!connect":
+                        sendServerMessage(eingabe[1]);
+
+                        break;
+
+                    case "y":
+                        if (requestReceived.get()) {
+                            udpSocket = new DatagramSocket();
+                            sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
+                            System.out.println("Starting chat!");
+                            startChatProtocol();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        break;
+
+                    case "n":
+                        if (requestReceived.getValue()) {
+                            sendServerMessage("REQUEST_DENIED");
+                        }
+                        break;
+
+                    default:
+
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.print("Gib ein client ein zu dem du connecten willst!");
+        }
+    }
+
+    public void userConsoleLogin() {
+        boolean registerd = false;
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            System.out.println("Geben sie ihren Username ein!");
+            username = bufferedReader.readLine();
+            System.out.println("Geben sie ihr Passwort ein!");
+            password = bufferedReader.readLine();
+
+            String userData = username + ";" + password;
+            sendServerMessage(userData);
+
+
+            if (!registerd) {
+                while (!registerd) {
+                    switch (getServerMessage(socket).strip()) {
+                        case "REG_OK":
+                            System.out.println("Du bist mit dem Server verbunden!");
+                            registerd = true;
+                            break;
+
+                        case "PASSWORD_INVALID":
+                            System.out.println("Passwort falsch bitte neu versuchen!");
+                            password = bufferedReader.readLine();
+                            userData = username + ";" + password;
+                            sendServerMessage(userData);
+                            break;
+
+                        case "REG_NEW":
+                            System.out.println("Du wurdest als neue Benutzer angemeldet");
+                            registerd = true;
+                            break;
                     }
-                });
+                }
+            }
+        }catch(IOException e){
 
-//                Thread userInputHandler = new Thread(() -> {
-//
-//                    try {
-//                        while (true) {
-//                            String eingabe[] = bufferedReader.readLine().split(" ");
-//                            //System.out.println("UR INPUT: "+ eingabe);
-//                            switch (eingabe[0]) {
-//                                case "!clients":
-//                                    dataOut.writeUTF("GET_CLIENTS");
-//                                    //System.out.println(serverMesage);
-//                                    break;
-//
-//                                case "!connect":
-//                                    //System.out.println("UR INPUT: "+ eingabe[0]);
-//                                    dataOut.writeUTF(eingabe[1]);
-//
-//                                    break;
-//
-//                                case "y":
-//                                    if (requestReceived) {
-//                                        udpSocket = new DatagramSocket();
-//                                        dataOut.writeUTF("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
-//                                        System.out.println("Starting chat!");
-//                                        startChatProtocol();
-//                                    }
-//                                    break;
-//
-//                                case "n":
-//                                    if (requestReceived) {
-//                                        dataOut.writeUTF("REQUEST_DENIED");
-//                                    }
-//                                    break;
-//
-//                                default:
-//                                    //System.out.println("USER INPUT:" + eingabe);
-//                            }
-//                            //System.out.println("end");
-//                        }
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    } catch (ArrayIndexOutOfBoundsException e) {
-//                        System.out.print("Gib ein client ein zu dem du connecten willst!");
-//                    }
-//                });
-//
-//                userInputHandler.start();
-                serverMessageHandler.start();
-
+        }
     }
-public void connection(String username) throws IOException {
-    DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-    try {
-        dataOut.writeUTF(username);
 
-    }catch(Exception ignored){
+    public void connection(String username) throws IOException {
+        DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+        try {
+            sendServerMessage(username);
+        }catch(Exception ignored){
 
+        }
     }
-}
-    public void serverMessage(String message) throws IOException {
+    public void sendServerMessage(String message) throws IOException {
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
         try {
             dataOut.writeUTF(message);
@@ -351,10 +341,16 @@ public void connection(String username) throws IOException {
 
         }
     }
+    String getServerMessage(Socket socket) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        char[] buffer = new char[200];
+        int anzahlZeichen = bufferedReader.read(buffer, 0, 200);
+        return new String(buffer, 0, anzahlZeichen);
+    }
+
     void setUsername(String username) {
         this.username = username;
     }
-
 
 
     void setPassword(String password) {
@@ -363,13 +359,6 @@ public void connection(String username) throws IOException {
 
     String getPassword() {
         return this.password;
-    }
-
-    String leseNachricht(Socket socket) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        char[] buffer = new char[200];
-        int anzahlZeichen = bufferedReader.read(buffer, 0, 200);
-        return new String(buffer, 0, anzahlZeichen);
     }
 
     public ObservableList<String> getClients() {

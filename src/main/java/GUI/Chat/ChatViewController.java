@@ -48,7 +48,7 @@ public class ChatViewController extends ViewController<ChatApplication> {
             view.messageHistory.setItems(client.getMessage());
         });
         view.sendMsgButton.setOnAction(e -> {
-            client.sendMessage(view.messageArea.getText());
+            client.sendClientMessage(view.messageArea.getText());
             view.messageArea.clear();
         });
     }

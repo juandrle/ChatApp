@@ -69,13 +69,12 @@ public class MultiServer {
 
         @Override
         public void run() {
-
             try {
                 DataInputStream dataIn = new DataInputStream(clientSocket.getInputStream());
                 while (true) {
                     nachricht = dataIn.readUTF();
-                    String cmd = nachricht.split(":")[0].trim();
-                    nachricht = nachricht.split(":")[1];
+                    String cmd = nachricht.split(" ")[0];
+                    nachricht = nachricht.split(" ")[1];
                     System.out.println("CLIENT MESSAGE: " + cmd + nachricht);
                     switch (cmd) {
                         case "LOGIN" -> {
@@ -105,7 +104,7 @@ public class MultiServer {
                         }
                         case "REQUEST_ACCEPTED" -> {
                             schreibeNachricht(requestUser, "REQUEST_ACCEPTED");
-                            schreibeNachricht(requestUser, nachricht.split(" ")[1] + ";" + wantedSocket.getInetAddress());
+                            schreibeNachricht(requestUser, nachricht + ";" + wantedSocket.getInetAddress());
                         }
                         case "REQUEST_DENIED" -> {
                             schreibeNachricht(requestUser, "REQUEST_DENIED");
