@@ -52,7 +52,7 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
                     });
                     setGraphic(hBox);
 
-                }
+                } else setGraphic(null);
             }
         });
         view.chatPartner.setItems(client.getClients());
