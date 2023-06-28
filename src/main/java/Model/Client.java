@@ -146,7 +146,7 @@ public class Client {
         this.username = username;
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
 
-        String userData = username + ";" + password;
+        String userData ="LOGIN: "+ username + ";" + password;
         dataOut.writeUTF(userData);
 
         switch (leseNachricht(socket).strip()) {
