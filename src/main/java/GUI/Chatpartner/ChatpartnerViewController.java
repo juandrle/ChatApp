@@ -5,6 +5,7 @@ import GUI.Options.OptionsViewController;
 import GUI.Scenes;
 import GUI.ViewController;
 import Model.Client;
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,7 +41,7 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 setId("clientCell");
-                if (!empty) {
+                if (!empty && !item.isBlank()) {
                     username.setText(item);
                     connect.setOnAction(e -> {
                         try {
@@ -51,6 +52,7 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
                         }
                     });
                     setGraphic(hBox);
+                    Platform.runLater(() -> connect.setTranslateX((200 - username.getWidth())));
 
                 } else setGraphic(null);
             }
