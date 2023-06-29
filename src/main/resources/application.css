@@ -125,11 +125,15 @@
     -fx-background-image: url("310522.jpg");
     -fx-background-repeat: no-repeat;
     -fx-background-size: cover;
-    -fx-padding: 30;
 
 }
+#chat #menubar {
+    -fx-padding: 0;
+}
+
 
 #chat #msgBackground {
+    -fx-end-margin: 50;
     -fx-background-color: #646464;
     -fx-max-width: 600;
     -fx-max-height: 200;
