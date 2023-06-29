@@ -11,7 +11,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
@@ -31,8 +30,7 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
 
     @Override
     public void initialize() {
-        //view.setTop(optionsViewController.getView());
-        view.username.setText(client.getUsername());
+        view.setTop(optionsViewController.getView());
         view.chatPartner.setCellFactory(e -> new ListCell<>(){
             Label username = new Label("Dummy Name");
             Button connect = new Button("connect");
