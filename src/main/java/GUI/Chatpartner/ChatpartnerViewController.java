@@ -41,7 +41,7 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 setId("clientCell");
-                if (!empty && !item.isBlank()) {
+                if (!empty && !item.isBlank() && !item.equals(client.getUsername())) {
                     username.setText(item);
                     connect.setOnAction(e -> {
                         try {
