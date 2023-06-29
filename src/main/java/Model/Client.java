@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 
 public class Client {
-    DatagramSocket udpSocket = new DatagramSocket();
+    DatagramSocket udpSocket;
     ObservableList<String> clients = FXCollections.observableArrayList();
     ObservableList<Message> message = FXCollections.observableArrayList();
 
@@ -31,7 +31,7 @@ public class Client {
 
     String serverMesage;
 
-    public Client(int port, String address) throws SocketException {
+    public Client(int port, String address) {
 
         this.port = port;
         this.address = address;
@@ -57,14 +57,15 @@ public class Client {
 
 
                 msg = "-connection:established--";
+                //sendClientMessage(msg);
                 message.add(new Message(this.username, msg));
                 System.out.println(msg);
-                //buffer = msg.getBytes();
+                buffer = msg.getBytes();
 
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, partnerAddress, Integer.parseInt(port));
                 udpSocket.send(packet);
-                startChatProtocol();
                 running = false;
+                startChatProtocol();
             }
 
 
@@ -77,7 +78,7 @@ public class Client {
 
     public void startChatProtocol() throws SocketException {
         buffer = new byte[65000];
-        this.udpSocket = new DatagramSocket();
+        //this.udpSocket = new DatagramSocket();
         Thread receiveMessages = new Thread(this::receiveClientMessage);
         receiveMessages.start();
     }
@@ -176,7 +177,7 @@ public class Client {
         return false;
     }
 
-    public static void main(String args[]) throws SocketException {
+    public static void main(String args[]) {
         Client client = new Client(25655, "localhost");
         try {
             client.clientLoop();
@@ -212,9 +213,11 @@ public class Client {
                     }
                     case "REQUEST_ACCEPTED" -> {
                         System.out.println("starting chat!");
-                        serverMesage = getServerMessage(socket);
-                        String chatPartnerPort = serverMesage.split(";")[0];
-                        String chatPartnerIP = serverMesage.split(";")[1];
+                        //serverMesage = getServerMessage(socket);
+                        String chatPartnerPort = serverMessageArray[1].split(";")[0];
+                        String chatPartnerIP = serverMessageArray[1].split(";")[1];
+                        System.out.println(serverMessageArray[0] + serverMessageArray[1]);
+
                         startChatProtocol(chatPartnerPort, chatPartnerIP);
                     }
                     case "CHAT_REQUEST" -> {
