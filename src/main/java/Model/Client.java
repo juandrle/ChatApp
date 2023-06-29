@@ -56,9 +56,9 @@ public class Client {
                 partnerAddress = InetAddress.getByName(ip.replace("/", "").strip());
 
 
-                msg = "-connection:established--";
+                msg = this.username + ":-connection_established--";
                 //sendClientMessage(msg);
-                message.add(new Message(this.username, msg));
+                message.add(new Message(this.username, msg.split(":")[1]));
                 System.out.println(msg);
                 buffer = msg.getBytes();
 

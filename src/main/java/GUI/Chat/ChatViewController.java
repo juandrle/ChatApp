@@ -42,6 +42,9 @@ public class ChatViewController extends ViewController<ChatApplication> {
                 username.setId("username");
                 if (!empty) {
                     username.setText(item.getUser());
+                    if (username.getText().equals(client.getUsername()))
+                        vBox.setId("chatCellBoxOwn");
+                    else vBox.setId("chatCellBox");
                     message.setText(item.getMessage());
                     setGraphic(vBox);
                 }
