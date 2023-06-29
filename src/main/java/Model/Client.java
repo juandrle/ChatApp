@@ -5,11 +5,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.util.Arrays;
 
 
@@ -20,6 +17,7 @@ public class Client {
 
 
     byte buffer[] = new byte[65000];
+    byte audioData[];
     Socket socket;
     int port;
     String serverMessageArray[];
@@ -33,6 +31,8 @@ public class Client {
     String password;
 
     String serverMesage;
+    Thread receiveClientMessages = new Thread(this::receiveClientMessage);
+    Thread acceptAudioFileThread = new Thread(this::acceptAudioFile);
 
     public Client(int port, String address) {
 
@@ -80,8 +80,7 @@ public class Client {
 
     public void startChatProtocol() {
         buffer = new byte[65000];
-        Thread receiveMessages = new Thread(this::receiveClientMessage);
-        receiveMessages.start();
+        receiveClientMessages.start();
     }
 
     public void receiveClientMessage() {
@@ -93,9 +92,14 @@ public class Client {
                 packetAddress = packet.getAddress();
 
                 String received = new String(packet.getData(), 0, packet.getLength());
-                message.add(new Message(received.split(":")[0], received.split(":")[1]));
+                if(received.equals("AUDIO_FILE")){
+                    acceptAudioFileThread.join();
+                    System.out.println("AUDIO_RECEIVED");
+                }else {
+                    message.add(new Message(received.split(":")[0], received.split(":")[1]));
 
-                System.out.println(received);
+                    System.out.println(received);
+                }
             }
 
         } catch (Exception e) {
@@ -103,9 +107,51 @@ public class Client {
         }
 
     }
+    public void acceptAudioFile() {
+        try{
+            ByteArrayOutputStream concatenateStream = new ByteArrayOutputStream();
+            while (true) {
 
-    public void sendClientFile(File file){
+                DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
+                udpSocket.receive(receivePacket);
+                byte[] packetData = new byte[receivePacket.getLength()];
 
+                System.arraycopy(receivePacket.getData(), 0, packetData, 0, packetData.length);
+                concatenateStream.write(audioData);
+                concatenateStream.write(packetData);
+                audioData = concatenateStream.toByteArray();
+
+                udpSocket.setSoTimeout(3000);
+            }
+        }catch(Exception e){
+            acceptAudioFileThread.stop();
+        }
+
+    }
+
+    public void sendAudioFile(File file){
+        try {
+            int maxPacketSize = udpSocket.getSendBufferSize() - 4;
+
+            FileInputStream fis = new FileInputStream(file);
+            byte[] audioFileByte = new byte[(int) file.length()];
+            fis.read(audioFileByte);
+
+            int totalPackets = (int) Math.ceil((double) audioFileByte.length / maxPacketSize);
+            for (int i = 0; i < totalPackets; i++) {
+
+                int offset = i * maxPacketSize;
+                int length = Math.min(audioFileByte.length - offset, maxPacketSize);
+                byte[] packetData = new byte[length];
+                System.arraycopy(audioFileByte, offset, packetData, 0, length);
+
+                DatagramPacket packet = new DatagramPacket(packetData, length, packetAddress, packetPort);
+                udpSocket.send(packet);
+            }
+
+        }catch(Exception e){
+
+        }
     }
 
     public void sendClientMessage(String msg) {
@@ -116,7 +162,7 @@ public class Client {
             int maxPacketSize = udpSocket.getSendBufferSize() - 4;
             buffer = new byte[maxPacketSize];
             int totalPackets = (int) Math.ceil((double) messageBytes.length / maxPacketSize);
-            System.out.println("TOTAL PACKETS: " + totalPackets + " MAXPACKETSIZE: " + maxPacketSize + " MESSAGEBYTES: " + messageBytes);
+
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, packetAddress, packetPort);
             message.add(new Message(this.username, msg.split(":")[1]));
             udpSocket.send(packet);
@@ -124,7 +170,6 @@ public class Client {
             //buffer = msg.getBytes();
 
             for (int i = 0; i < totalPackets; i++) {
-                System.out.println(i);
                 int offset = i * maxPacketSize;
                 int length = Math.min(maxPacketSize, messageBytes.length - offset);
                 buffer = new byte[length];
@@ -132,8 +177,6 @@ public class Client {
 
                 packet = new DatagramPacket(buffer, buffer.length, packetAddress, packetPort);
                 udpSocket.send(packet);
-
-
             }
         } catch (Exception e) {
 
