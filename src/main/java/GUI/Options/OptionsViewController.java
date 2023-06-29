@@ -6,6 +6,8 @@ import GUI.Scenes;
 import GUI.ViewController;
 import Model.Client;
 
+import java.io.IOException;
+
 public class OptionsViewController {
     Client client;
     OptionsView view;
@@ -18,8 +20,17 @@ public class OptionsViewController {
         initialize();
     }
     public void initialize() {
-        view.logout.setOnAction(e -> application.switchScene(Scenes.LOGIN_VIEW));
-        view.disconnect.setOnAction(e -> application.switchScene(Scenes.CHATPARTNER_VIEW));
+        view.logout.setOnAction(e -> {
+            try {
+                client.disconnnect();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            application.switchScene(Scenes.LOGIN_VIEW);
+        });
+        view.disconnect.setOnAction(e -> {
+            application.switchScene(Scenes.CHATPARTNER_VIEW);
+        });
     }
 
     public OptionsView getView() {

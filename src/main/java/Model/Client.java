@@ -5,16 +5,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.util.Arrays;
 
 
 public class Client {
-    DatagramSocket udpSocket;
+    DatagramSocket udpSocket = new DatagramSocket();
     ObservableList<String> clients = FXCollections.observableArrayList();
     ObservableList<Message> message = FXCollections.observableArrayList();
 
@@ -34,7 +31,7 @@ public class Client {
 
     String serverMesage;
 
-    public Client(int port, String address) {
+    public Client(int port, String address) throws SocketException {
 
         this.port = port;
         this.address = address;
@@ -53,11 +50,11 @@ public class Client {
         String msg;
         boolean running = true;
         try {
+            this.udpSocket = new DatagramSocket();
             while (running) {
 
                 partnerAddress = InetAddress.getByName(ip.replace("/", "").strip());
 
-                udpSocket = new DatagramSocket();
 
                 msg = "-connection:established--";
                 message.add(new Message(this.username, msg));
@@ -78,8 +75,9 @@ public class Client {
 
     }
 
-    public void startChatProtocol() {
+    public void startChatProtocol() throws SocketException {
         buffer = new byte[65000];
+        this.udpSocket = new DatagramSocket();
         Thread receiveMessages = new Thread(this::receiveClientMessage);
         receiveMessages.start();
     }
@@ -136,7 +134,7 @@ public class Client {
 
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
     }
@@ -148,8 +146,9 @@ public class Client {
 
         String userData ="LOGIN "+ username + ";" + password;
         sendServerMessage(userData);
+        String serverCmd = getServerMessage(socket).strip();
 
-        switch (getServerMessage(socket).strip()) {
+        switch (serverCmd) {
             case "REG_OK" -> {
                 System.out.println("Du bist mit dem Server verbunden!");
                 //dataOut.writeUTF("GET_CLIENTS");
@@ -169,12 +168,15 @@ public class Client {
                 clientLoop();
                 return true;
             }
+            default -> {
+                System.out.println(serverCmd);
+            }
         }
 
         return false;
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws SocketException {
         Client client = new Client(25655, "localhost");
         try {
             client.clientLoop();
@@ -194,50 +196,43 @@ public class Client {
 
 
     public void serverMessageHandler(){
+        boolean connected = true;
         try {
-            while (true) {
+            while (connected) {
                 serverMessageArray = getServerMessage(socket).split(" ");
                 serverMesage = serverMessageArray[0];
                 serverMessageArray[0] = "";
                 System.out.println("RECEIVED FROM SERVER: " + serverMesage);
                 switch (serverMesage.trim()) {
-                    case "CLIENT_LIST":
+                    case "CLIENT_LIST" -> {
                         clients.clear();
-                        clients.addAll(Arrays.asList(serverMessageArray).subList(1, serverMessageArray.length));
+                        clients.addAll(Arrays.asList(serverMessageArray).subList(1, serverMessageArray.length - 1));
+                        clients.remove(username);
                         System.out.println(clients);
-                        break;
-
-                    case "REQUEST_ACCEPTED":
+                    }
+                    case "REQUEST_ACCEPTED" -> {
                         System.out.println("starting chat!");
                         serverMesage = getServerMessage(socket);
                         String chatPartnerPort = serverMesage.split(";")[0];
                         String chatPartnerIP = serverMesage.split(";")[1];
-
                         startChatProtocol(chatPartnerPort, chatPartnerIP);
-                        break;
-
-
-                    case "CHAT_REQUEST":
+                    }
+                    case "CHAT_REQUEST" -> {
                         System.out.println("Chat Einladung erhalten! y: zum akzeptieren ODER n: zum ablehnen!");
-                        requestReceived.set(true);
                         udpSocket = new DatagramSocket();
                         //dataOut.writeUTF("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
                         sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
                         System.out.println("Starting chat!");
                         startChatProtocol();
-
-                        break;
-
-                    case "USER_NOT_FOUND":
-                        System.out.println("Benutzer nicht gefunden, bitte erneut eingeben!");
-                        break;
-
-                    case "REQUEST_DENIED":
-                        System.out.println("ABGELEHNT");
-                        break;
-
-                    default:
-                        System.out.println(serverMesage);
+                        requestReceived.set(true);
+                    }
+                    case "EXIT_SUCCESSFUL" -> {
+                        socket.close();
+                        connected = false;
+                    }
+                    case "USER_NOT_FOUND" -> System.out.println("Benutzer nicht gefunden, bitte erneut eingeben!");
+                    case "REQUEST_DENIED" -> System.out.println("ABGELEHNT");
+                    default -> System.out.println(serverMesage);
                 }
             }
         }catch(IOException e){e.printStackTrace();}
@@ -327,7 +322,7 @@ public class Client {
     public void connection(String username) throws IOException {
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
         try {
-            sendServerMessage(username);
+            sendServerMessage("CONNECT " + username);
         }catch(Exception ignored){
 
         }
@@ -374,6 +369,9 @@ public class Client {
     }
     public String getUsername() {
         return this.username;
+    }
+    public void disconnnect() throws IOException {
+        sendServerMessage("EXIT");
     }
 
 }

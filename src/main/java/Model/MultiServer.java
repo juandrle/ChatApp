@@ -55,6 +55,7 @@ public class MultiServer {
         String password;
         String line;
         String nachricht = null;
+        boolean connected = true;
 
 
 
@@ -64,17 +65,22 @@ public class MultiServer {
             //this.clientSockets  = sockets;
             //clientSockets.add(clientSocket);
             //System.out.println(clientSockets);
-
+            getClientsConnected();
         }
 
         @Override
         public void run() {
             try {
                 DataInputStream dataIn = new DataInputStream(clientSocket.getInputStream());
-                while (true) {
+                while (connected) {
+                    String cmd;
                     nachricht = dataIn.readUTF();
-                    String cmd = nachricht.split(" ")[0];
-                    nachricht = nachricht.split(" ")[1];
+
+                        cmd = nachricht.split(" ")[0];
+                        if (cmd.equals("LOGIN") || cmd.equals("CONNECT")) {
+                            nachricht = nachricht.split(" ")[1];
+                        }
+                    //cmd = nachricht.trim();
                     System.out.println("CLIENT MESSAGE: " + cmd + nachricht);
                     switch (cmd) {
                         case "LOGIN" -> {
@@ -82,7 +88,6 @@ public class MultiServer {
                             username = userData.split(";")[0];
                             password = nachricht.split(";")[1];
                             schreibeNachricht(clientSocket, login(username, password));
-                            updateAllClients();
 
                         }
                         case "CONNECT" -> {
@@ -99,21 +104,26 @@ public class MultiServer {
                             }
                         }
                         case "GET_CLIENTS" -> {
-                            schreibeNachricht(clientSocket, getClientsConnected());
+                            updateAllClients();
                             System.out.println(getClientsConnected());
                         }
                         case "REQUEST_ACCEPTED" -> {
-                            schreibeNachricht(requestUser, "REQUEST_ACCEPTED");
-                            schreibeNachricht(requestUser, nachricht + ";" + wantedSocket.getInetAddress());
+                            System.out.println(nachricht + ";" + wantedSocket.getInetAddress());
+
+                            schreibeNachricht(requestUser,  nachricht + ";" + wantedSocket.getInetAddress());
                         }
                         case "REQUEST_DENIED" -> {
                             schreibeNachricht(requestUser, "REQUEST_DENIED");
                         }
                         case "EXIT" -> {
-                            clients.remove(clientSocket);
                             System.out.println("DISCONNECTED");
+                            usernameClientMap.remove(username);
                             updateAllClients();
+                            schreibeNachricht(clientSocket, "EXIT_SUCCESSFUL");
+                            Thread.sleep(2000);
                             clientSocket.close();
+                            connected = false;
+
                         }
                         default -> {
 
@@ -124,6 +134,8 @@ public class MultiServer {
 
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -171,15 +183,16 @@ public class MultiServer {
 
         String getClientsConnected() {
             String clientsConnected = "CLIENT_LIST ";
-            for (Object i : usernameClientMap.keySet()) {
-                if (i != null) clientsConnected += i + " ";
+            for (String i : usernameClientMap.keySet()) {
+                if (i != null && !clientsConnected.contains(i)) clientsConnected += i + " ";
             }
             return clientsConnected;
         }
 
         void updateAllClients() throws IOException {
 
-            for (ClientHandler x : clients) {
+            for (ClientHandler x : usernameClientMap.values()) {
+                //if (username.equals(x.username)) continue;
                 x.schreibeNachricht(x.clientSocket, getClientsConnected());
             }
         }

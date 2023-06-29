@@ -20,18 +20,18 @@ public class ChatApplication extends Application {
     @Override
     public void init() throws Exception {
         scenes = new HashMap<>();
-        client = new Client(25656, "localhost");
+        //client = new Client(25656, "localhost");
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         try {
             ViewController<ChatApplication> controller;
-            controller = new LoginViewController(this, client);
+            controller = new LoginViewController(this);
             scenes.put(Scenes.LOGIN_VIEW, controller.getRootView());
             // for making the style
-            controller = new ChatViewController(this, client);
-            scenes.put(Scenes.CHAT_VIEW, controller.getRootView());
+            //controller = new ChatViewController(this, client);
+            //scenes.put(Scenes.CHAT_VIEW, controller.getRootView());
 
             Pane root = scenes.get(Scenes.LOGIN_VIEW);
             scene = new Scene(root, 640, 800);

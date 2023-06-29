@@ -19,26 +19,28 @@ public class LoginViewController extends ViewController<ChatApplication> {
     OptionsViewController optionsViewController;
     ChatpartnerViewController chatpartnerViewController;
 
-    public LoginViewController(ChatApplication application, Client client) {
+    public LoginViewController(ChatApplication application) {
         super(application);
         this.client = client;
         rootView = new LoginView();
         view = (LoginView) rootView;
-        optionsViewController = new OptionsViewController(application, client);
         initialize();
     }
 
     @Override
     public void initialize() {
-        view.setTop(optionsViewController.getView());
         view.loginButton.setOnAction(e -> {
             try {
+                this.client = new Client(25656, "localhost");
                 if (client.einloggen(view.username.getText(), view.password.getText())) {
                     chatpartnerViewController = new ChatpartnerViewController(application, client);
                     application.getScenes().put(Scenes.CHATPARTNER_VIEW, chatpartnerViewController.getRootView());
                     application.switchScene(Scenes.CHATPARTNER_VIEW);
                 }
-                else animation();
+                else {
+                    view.password.clear();
+                    animation();
+                }
             } catch (IOException | InterruptedException ex) {
                 throw new RuntimeException(ex);
             }

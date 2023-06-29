@@ -1,5 +1,6 @@
 package GUI.Chatpartner;
 
+import GUI.Chat.ChatViewController;
 import GUI.ChatApplication;
 import GUI.Options.OptionsViewController;
 import GUI.Scenes;
@@ -18,6 +19,7 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
     Client client;
     ChatpartnerView view;
     OptionsViewController optionsViewController;
+    ChatViewController chatViewController;
 
     public ChatpartnerViewController(ChatApplication application, Client client) {
         super(application);
@@ -25,6 +27,8 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
         rootView = new ChatpartnerView();
         view = (ChatpartnerView) rootView;
         optionsViewController = new OptionsViewController(application,client);
+        chatViewController = new ChatViewController(application, client);
+        application.getScenes().put(Scenes.CHAT_VIEW, chatViewController.getRootView());
         initialize();
     }
 
@@ -39,11 +43,11 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 setId("clientCell");
-                if (!empty && !item.isBlank() && !item.equals(client.getUsername())) {
+                if (!empty) {
                     username.setText(item);
                     connect.setOnAction(e -> {
                         try {
-                            client.connection(item);
+                            client.connection(item.strip());
                             application.switchScene(Scenes.CHAT_VIEW);
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
