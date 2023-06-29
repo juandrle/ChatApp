@@ -181,7 +181,7 @@
     -fx-max-height: 400;
     -fx-pref-height: 450;
     -fx-max-width: 500;
-    -fx-background-color: #494949;
+    -fx-background-color: #646464;
     -fx-border-radius: 20;
 }
 #menubar {
@@ -203,14 +203,20 @@
 .context-menu {
     -fx-background-color: rgba(20, 20, 20, 0.5);
 }
-#chatcell {
+#chatCell {
     -fx-background-color: #646464;
     -fx-padding: 5;
 }
 #chatCell .label {
+    -fx-translate-x: 10;
+    -fx-padding: 5;
     -fx-text-fill: white;
     -fx-font-size: 15;
 }
 #chatCell #username {
     -fx-font-size: 20;
+}
+#chatCellBox {
+    -fx-background-color: #494949;
+    -fx-background-radius: 20;
 }

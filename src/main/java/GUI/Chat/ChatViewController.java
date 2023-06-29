@@ -38,6 +38,7 @@ public class ChatViewController extends ViewController<ChatApplication> {
             protected void updateItem(Message item, boolean empty) {
                 super.updateItem(item, empty);
                 setId("chatCell");
+                vBox.setId("chatCellBox");
                 username.setId("username");
                 if (!empty) {
                     username.setText(item.getUser());
