@@ -30,7 +30,7 @@ public class OptionsViewController {
         });
         view.disconnect.setOnAction(e -> {
             application.switchScene(Scenes.CHATPARTNER_VIEW);
-            // Here needs to be UDP disconnect
+            // TODO: need a method in the Client to disconnect the UDP session
         });
     }
 

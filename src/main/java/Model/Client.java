@@ -106,7 +106,7 @@ public class Client {
                         System.out.println(receivedArray[1]);
                     }
                     case "FILE" -> {
-                        // TODO: Code to receive a File
+                        // TODO: Finish receive File here
                         int totalPackets = Integer.parseInt(received.split(":")[2]);
 
                         // Create a new file to save the received data
