@@ -16,10 +16,10 @@ public class Client {
     ObservableList<Message> message = FXCollections.observableArrayList();
 
 
-    byte buffer[] = new byte[65000];
+    byte[] buffer = new byte[65000];
     Socket socket;
     int port;
-    String serverMessageArray[];
+    String[] serverMessageArray;
     String address;
     InetAddress partnerAddress;
     InetAddress packetAddress;
@@ -45,7 +45,6 @@ public class Client {
     }
 
     public void startChatProtocol(String port, String ip) {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         String msg;
         boolean running = true;
         try {
@@ -76,8 +75,7 @@ public class Client {
     }
 
     public void startChatProtocol() throws SocketException {
-        buffer = new byte[65000];
-        //this.udpSocket = new DatagramSocket();
+        buffer = new byte[65535];
         Thread receiveMessages = new Thread(this::receiveClientMessage);
         receiveMessages.start();
     }
@@ -91,7 +89,8 @@ public class Client {
                 packetAddress = packet.getAddress();
 
                 String received = new String(packet.getData(), 0, packet.getLength());
-                String msgPrefix = received.split(":")[0];
+                String msgPrefix = received.split(":")[0].trim();
+                System.out.println(msgPrefix);
                 switch (msgPrefix) {
                     case "MESSAGE" -> {
                         String[] receivedArray = received.split(":");
@@ -106,7 +105,8 @@ public class Client {
                         System.out.println(receivedArray[1]);
                     }
                     case "FILE" -> {
-                        // TODO: Finish receive File here
+                        System.out.println("Should receive File now :D");
+                        // TODO: Finish receive File here for some reason it doesn't go in here
                         int totalPackets = Integer.parseInt(received.split(":")[2]);
 
                         // Create a new file to save the received data
@@ -131,16 +131,16 @@ public class Client {
 
     }
 
-    public void sendClientFile(File file) {
+    public synchronized void sendClientFile(File file) {
         String msgPrefix = "FILE:";
         try (BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file))) {
-            int maxPacketSize = udpSocket.getSendBufferSize() - 4;
+            int maxPacketSize = udpSocket.getSendBufferSize() - 28;
             buffer = new byte[maxPacketSize];
             long fileSize = file.length();
             int totalPackets = (int) Math.ceil((double) fileSize / maxPacketSize);
 
             // Send total packets information
-            sendClientMessage("TOTAL_PACKETS:" + totalPackets);
+            sendClientMessage(msgPrefix + "TOTAL_PACKETS:" + totalPackets);
 
             DatagramPacket packet;
             int bytesRead;
@@ -148,10 +148,35 @@ public class Client {
 
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                 packet = new DatagramPacket(buffer, bytesRead, packetAddress, packetPort);
-                udpSocket.send(packet);
-                System.out.println("Sent packet " + packetNumber + " of " + totalPackets);
-                packetNumber++;
+                boolean packetSent = false;
 
+                while (!packetSent) {
+                    try {
+                        udpSocket.send(packet);
+                        System.out.println("Sent packet " + packetNumber + " of " + totalPackets);
+                        packetSent = true;
+                    } catch (IOException e) {
+                        // Error occurred while sending the packet, retry
+                        System.err.println("Error sending packet " + packetNumber + ". Retrying...");
+                    }
+                }
+                // Wait for acknowledgment
+                boolean ackReceived = false;
+                while (!ackReceived) {
+                    try {
+                        udpSocket.receive(packet);
+                        // Assuming the acknowledgment message is "ACK"
+                        String ackMessage = new String(packet.getData(), 0, packet.getLength());
+                        if (ackMessage.equals("ACK")) {
+                            System.out.println("Received acknowledgment for packet " + packetNumber);
+                            ackReceived = true;
+                        }
+                    } catch (IOException e) {
+                        // Error occurred while receiving acknowledgment, retry
+                        System.err.println("Error receiving acknowledgment for packet " + packetNumber + ". Retrying...");
+                    }
+                }
+                packetNumber++;
                 buffer = new byte[maxPacketSize];
             }
 
@@ -161,9 +186,11 @@ public class Client {
         }
     }
 
-    public void sendClientMessage(String msg) {
+    public synchronized void sendClientMessage(String msg) {
         byte[] messageBytes;
-        String msgPrefix = "MESSAGE:";
+        String msgPrefix = "";
+        if (!msg.startsWith("FILE:"))
+            msgPrefix = "MESSAGE:";
         msg = msgPrefix + username + ":" + msg;
         messageBytes = msg.getBytes();
         try {
