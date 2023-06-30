@@ -9,6 +9,9 @@ import Model.Client;
 import javafx.animation.Interpolator;
 import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
+import javafx.event.ActionEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -21,7 +24,6 @@ public class LoginViewController extends ViewController<ChatApplication> {
 
     public LoginViewController(ChatApplication application) {
         super(application);
-        this.client = client;
         rootView = new LoginView();
         view = (LoginView) rootView;
         initialize();
@@ -29,29 +31,37 @@ public class LoginViewController extends ViewController<ChatApplication> {
 
     @Override
     public void initialize() {
-        view.loginButton.setOnAction(e -> {
-            try {
-                this.client = new Client(25656, "localhost");
-                if (client.einloggen(view.username.getText(), view.password.getText())) {
-                    chatpartnerViewController = new ChatpartnerViewController(application, client);
-                    application.getScenes().put(Scenes.CHATPARTNER_VIEW, chatpartnerViewController.getRootView());
-                    application.switchScene(Scenes.CHATPARTNER_VIEW);
-                }
-                else {
-                    view.password.clear();
-                    animation();
-                }
-            } catch (IOException | InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-            // implement check to Server here if Username and Password are right from MultiServerMethod
-            //if (view.username.getText().isBlank() || view.password.getText().isBlank()) {
-            //    return; // hier animation für fehler
-            //}
-            //application.switchScene(Scenes.CHATPARTNER_VIEW);
-        });
+        view.loginButton.setOnAction(this::loginHandler);
+        view.password.setOnKeyPressed(this::loginHandler);
+        view.username.setOnKeyPressed(this::loginHandler);
     }
 
+    private void loginHandler(KeyEvent event) {
+        if (event.getCode().equals(KeyCode.ENTER)) {
+            login();
+        }
+    }
+
+    private void login() {
+        try {
+            this.client = new Client(25656, "localhost");
+            if (client.einloggen(view.username.getText(), view.password.getText())) {
+                chatpartnerViewController = new ChatpartnerViewController(application, client);
+                application.getScenes().put(Scenes.CHATPARTNER_VIEW, chatpartnerViewController.getRootView());
+                application.switchScene(Scenes.CHATPARTNER_VIEW);
+            } else {
+                view.password.clear();
+                animation();
+            }
+        } catch (IOException | InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+
+    private void loginHandler(ActionEvent actionEvent){
+        login();
+    }
     private void animation() {
         SequentialTransition anim = new SequentialTransition();
         TranslateTransition transitionAnim = new TranslateTransition();

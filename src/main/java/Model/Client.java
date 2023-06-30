@@ -20,12 +20,11 @@ public class Client {
     Socket socket;
     int port;
     String serverMessageArray[];
-
     String address;
     InetAddress partnerAddress;
     InetAddress packetAddress;
     int packetPort;
-    SimpleBooleanProperty requestReceived ;
+    SimpleBooleanProperty requestReceived;
     String username;
     String password;
 
@@ -56,9 +55,9 @@ public class Client {
                 partnerAddress = InetAddress.getByName(ip.replace("/", "").strip());
 
 
-                msg = this.username + ":-connection_established--";
+                msg = "MESSAGE:" + this.username + ":-connection_established--";
                 //sendClientMessage(msg);
-                message.add(new Message(this.username, msg.split(":")[1]));
+                //message.add(new Message(this.username, msg.split(":")[1]));
                 System.out.println(msg);
                 buffer = msg.getBytes();
 
@@ -92,9 +91,38 @@ public class Client {
                 packetAddress = packet.getAddress();
 
                 String received = new String(packet.getData(), 0, packet.getLength());
-                message.add(new Message(received.split(":")[0], received.split(":")[1]));
+                String msgPrefix = received.split(":")[0];
+                switch (msgPrefix) {
+                    case "MESSAGE" -> {
+                        String[] receivedArray = received.split(":");
+                        if (receivedArray.length > 3)
+                            for (String parts : Arrays.stream(receivedArray).toList().subList(3, receivedArray.length)) {
+                                receivedArray[2] += ":" + parts;
+                            }
+                        if (received.endsWith(":-connection_established--")) sendClientMessage("MESSAGE:CONNECTION_OK");
+                        if (!received.endsWith(":-connection_established--") && !received.endsWith("CONNECTION_OK"))
+                            message.add(new Message(receivedArray[1], receivedArray[2]));
 
-                System.out.println(received);
+                        System.out.println(receivedArray[1]);
+                    }
+                    case "FILE" -> {
+                        // TODO: Code to receive a File
+                        int totalPackets = Integer.parseInt(received.split(":")[2]);
+
+                        // Create a new file to save the received data
+                        File receivedFile = new File("received_file.txt");
+                        try (BufferedOutputStream fileOutputStream = new BufferedOutputStream(new FileOutputStream(receivedFile))) {
+                            for (int packetNumber = 1; packetNumber <= totalPackets; packetNumber++) {
+                                udpSocket.receive(packet);
+                                fileOutputStream.write(packet.getData(), 0, packet.getLength());
+                                System.out.println("Received packet " + packetNumber + " of " + totalPackets);
+                            }
+                            System.out.println("File received successfully.");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
 
         } catch (Exception e) {
@@ -103,26 +131,58 @@ public class Client {
 
     }
 
-    public void sendClientFile(File file){
+    public void sendClientFile(File file) {
+        String msgPrefix = "FILE:";
+        try (BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file))) {
+            int maxPacketSize = udpSocket.getSendBufferSize() - 4;
+            buffer = new byte[maxPacketSize];
+            long fileSize = file.length();
+            int totalPackets = (int) Math.ceil((double) fileSize / maxPacketSize);
 
+            // Send total packets information
+            sendClientMessage("TOTAL_PACKETS:" + totalPackets);
+
+            DatagramPacket packet;
+            int bytesRead;
+            int packetNumber = 1;
+
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                packet = new DatagramPacket(buffer, bytesRead, packetAddress, packetPort);
+                udpSocket.send(packet);
+                System.out.println("Sent packet " + packetNumber + " of " + totalPackets);
+                packetNumber++;
+
+                buffer = new byte[maxPacketSize];
+            }
+
+            System.out.println("File sent successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendClientMessage(String msg) {
         byte[] messageBytes;
-        msg = username + ": " + msg;
+        String msgPrefix = "MESSAGE:";
+        msg = msgPrefix + username + ":" + msg;
         messageBytes = msg.getBytes();
         try {
             int maxPacketSize = udpSocket.getSendBufferSize() - 4;
             buffer = new byte[maxPacketSize];
             int totalPackets = (int) Math.ceil((double) messageBytes.length / maxPacketSize);
-            System.out.println("TOTAL PACKETS: " + totalPackets + " MAXPACKETSIZE: " + maxPacketSize + " MESSAGEBYTES: " + messageBytes);
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, packetAddress, packetPort);
-            message.add(new Message(this.username, msg.split(":")[1]));
+            DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, packetAddress, packetPort);
+            String[] sendArray = msg.split(":");
+            if (sendArray.length > 3)
+                for (String parts : Arrays.stream(sendArray).toList().subList(3, sendArray.length)) {
+                    sendArray[2] += ":" + parts;
+                }
+            if (!msg.endsWith(":-connection_established--") && !msg.endsWith("CONNECTION_OK"))
+                message.add(new Message(this.username, sendArray[2]));
             udpSocket.send(packet);
 
             //buffer = msg.getBytes();
 
-            for (int i = 0; i < totalPackets; i++) {
+            for (int i = 1; i < totalPackets; i++) {
                 System.out.println(i);
                 int offset = i * maxPacketSize;
                 int length = Math.min(maxPacketSize, messageBytes.length - offset);
@@ -145,7 +205,7 @@ public class Client {
         this.username = username;
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
 
-        String userData ="LOGIN "+ username + ";" + password;
+        String userData = "LOGIN " + username + ";" + password;
         sendServerMessage(userData);
         String serverCmd = getServerMessage(socket).strip();
 
@@ -196,7 +256,7 @@ public class Client {
     }
 
 
-    public void serverMessageHandler(){
+    public void serverMessageHandler() {
         boolean connected = true;
         try {
             while (connected) {
@@ -238,14 +298,16 @@ public class Client {
                     default -> System.out.println(serverMesage);
                 }
             }
-        }catch(IOException e){e.printStackTrace();}
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void userInputHandler(){
+    public void userInputHandler() {
         try {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
             while (true) {
-                String eingabe[] = bufferedReader.readLine().split(" ");
+                String[] eingabe = bufferedReader.readLine().split(" ");
                 switch (eingabe[0]) {
                     case "!clients":
                         sendServerMessage("GET_CLIENTS");
@@ -317,7 +379,7 @@ public class Client {
                     }
                 }
             }
-        }catch(IOException e){
+        } catch (IOException e) {
 
         }
     }
@@ -326,19 +388,21 @@ public class Client {
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
         try {
             sendServerMessage("CONNECT " + username);
-        }catch(Exception ignored){
+        } catch (Exception ignored) {
 
         }
     }
+
     public void sendServerMessage(String message) throws IOException {
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
         try {
             dataOut.writeUTF(message);
 
-        }catch(Exception ignored){
+        } catch (Exception ignored) {
 
         }
     }
+
     String getServerMessage(Socket socket) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         char[] buffer = new char[200];
@@ -370,9 +434,11 @@ public class Client {
     public SimpleBooleanProperty requestReceivedProperty() {
         return requestReceived;
     }
+
     public String getUsername() {
         return this.username;
     }
+
     public void disconnnect() throws IOException {
         sendServerMessage("EXIT");
     }
