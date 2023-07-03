@@ -27,6 +27,9 @@ public class Client {
     SimpleBooleanProperty requestReceived;
     String username;
     String password;
+    Thread receiveMessages;
+
+    DatagramPacket ackPacket;
 
     String serverMesage;
 
@@ -76,7 +79,7 @@ public class Client {
 
     public void startChatProtocol() throws SocketException {
         buffer = new byte[65535];
-        Thread receiveMessages = new Thread(this::receiveClientMessage);
+        receiveMessages = new Thread(this::receiveClientMessage);
         receiveMessages.start();
     }
 
@@ -90,7 +93,7 @@ public class Client {
 
                 String received = new String(packet.getData(), 0, packet.getLength());
                 String msgPrefix = received.split(":")[0].trim();
-                System.out.println(msgPrefix);
+                System.out.println("RECEIVED: "+ received+ "PREFIX: "+ msgPrefix);
                 switch (msgPrefix) {
                     case "MESSAGE" -> {
                         String[] receivedArray = received.split(":");
@@ -107,20 +110,27 @@ public class Client {
                     case "FILE" -> {
                         System.out.println("Should receive File now :D");
                         // TODO: Finish receive File here for some reason it doesn't go in here
-                        int totalPackets = Integer.parseInt(received.split(":")[2]);
+                        int totalPackets = Integer.parseInt(received.split(":")[4]);
 
                         // Create a new file to save the received data
-                        File receivedFile = new File("received_file.txt");
+                        File receivedFile = new File("received_file.png");
                         try (BufferedOutputStream fileOutputStream = new BufferedOutputStream(new FileOutputStream(receivedFile))) {
                             for (int packetNumber = 1; packetNumber <= totalPackets; packetNumber++) {
+
                                 udpSocket.receive(packet);
                                 fileOutputStream.write(packet.getData(), 0, packet.getLength());
+                                byte[] ackBytes = "ACK".getBytes();
+                                DatagramPacket ack = new DatagramPacket(ackBytes, ackBytes.length,packetAddress,packetPort);
+                                udpSocket.send(ack);
                                 System.out.println("Received packet " + packetNumber + " of " + totalPackets);
                             }
                             System.out.println("File received successfully.");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                    }
+                    case "ACK" ->{
+                        ackPacket = packet;
                     }
                 }
             }
@@ -134,29 +144,34 @@ public class Client {
     public synchronized void sendClientFile(File file) {
         String msgPrefix = "FILE:";
         try (BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file))) {
-            int maxPacketSize = udpSocket.getSendBufferSize() - 28;
-            buffer = new byte[maxPacketSize];
+            int maxPacketSize = udpSocket.getSendBufferSize() - 128;
+            byte[] fileBuffer = new byte[maxPacketSize-128];
+            System.out.println(fileBuffer.length);
             long fileSize = file.length();
             int totalPackets = (int) Math.ceil((double) fileSize / maxPacketSize);
 
             // Send total packets information
+            System.out.println("SEND: "+ msgPrefix + "TOTAL_PACKETS:"+ totalPackets);
             sendClientMessage(msgPrefix + "TOTAL_PACKETS:" + totalPackets);
+            wait(1);
 
             DatagramPacket packet;
             int bytesRead;
             int packetNumber = 1;
 
-            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                packet = new DatagramPacket(buffer, bytesRead, packetAddress, packetPort);
+            while ((bytesRead = fileInputStream.read(fileBuffer)) != -1) {
+                packet = new DatagramPacket(fileBuffer, bytesRead, packetAddress, packetPort);
                 boolean packetSent = false;
 
                 while (!packetSent) {
                     try {
+                        ackPacket = null;
                         udpSocket.send(packet);
                         System.out.println("Sent packet " + packetNumber + " of " + totalPackets);
                         packetSent = true;
                     } catch (IOException e) {
                         // Error occurred while sending the packet, retry
+                        e.printStackTrace();
                         System.err.println("Error sending packet " + packetNumber + ". Retrying...");
                     }
                 }
@@ -164,33 +179,38 @@ public class Client {
                 boolean ackReceived = false;
                 while (!ackReceived) {
                     try {
-                        udpSocket.receive(packet);
+                        //udpSocket.receive(packet);
                         // Assuming the acknowledgment message is "ACK"
-                        String ackMessage = new String(packet.getData(), 0, packet.getLength());
+                        String ackMessage = new String(ackPacket.getData(), 0, ackPacket.getLength());
                         if (ackMessage.equals("ACK")) {
                             System.out.println("Received acknowledgment for packet " + packetNumber);
                             ackReceived = true;
                         }
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         // Error occurred while receiving acknowledgment, retry
                         System.err.println("Error receiving acknowledgment for packet " + packetNumber + ". Retrying...");
                     }
                 }
                 packetNumber++;
-                buffer = new byte[maxPacketSize];
+                fileBuffer = new byte[maxPacketSize];
             }
 
             System.out.println("File sent successfully.");
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
     public synchronized void sendClientMessage(String msg) {
         byte[] messageBytes;
         String msgPrefix = "";
-        if (!msg.startsWith("FILE:"))
+        if (!msg.startsWith("FILE:")) {
             msgPrefix = "MESSAGE:";
+        }else if(msg.startsWith("FILE:")){
+            msgPrefix = "FILE:";
+        }
         msg = msgPrefix + username + ":" + msg;
         messageBytes = msg.getBytes();
         try {
