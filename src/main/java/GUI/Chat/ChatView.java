@@ -8,6 +8,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 // View to show the Chat
 public class ChatView extends BorderPane {
@@ -15,8 +16,10 @@ public class ChatView extends BorderPane {
     Button sendMsgButton;
     Button sendDataButton;
     ListView<Message> messageHistory;
+    FileChooser fileChooser;
 
     public ChatView(){
+        fileChooser = new FileChooser();
         messageArea = new TextArea();
         messageArea.setId("messageArea");
         messageHistory = new ListView<>();
