@@ -32,6 +32,7 @@ public class Client {
     DatagramPacket ackPacket;
 
     String serverMesage;
+    private long fileSendingDuration;
 
     public Client(int port, String address) {
 
@@ -97,23 +98,25 @@ public class Client {
                 switch (msgPrefix) {
                     case "MESSAGE" -> {
                         String[] receivedArray = received.split(":");
+                        String username = receivedArray[1];
                         if (receivedArray.length > 3)
                             for (String parts : Arrays.stream(receivedArray).toList().subList(3, receivedArray.length)) {
                                 receivedArray[2] += ":" + parts;
                             }
                         if (received.endsWith(":-connection_established--")) sendClientMessage("MESSAGE:CONNECTION_OK");
                         if (!received.endsWith(":-connection_established--") && !received.endsWith("CONNECTION_OK"))
-                            message.add(new Message(receivedArray[1], receivedArray[2]));
+                            message.add(new Message(username, receivedArray[2]));
 
                         System.out.println(receivedArray[1]);
                     }
                     case "FILE" -> {
                         System.out.println("Should receive File now :D");
-                        // TODO: Finish receive File here for some reason it doesn't go in here
                         int totalPackets = Integer.parseInt(received.split(":")[4]);
+                        String suffix = received.split(":")[5];
+                        fileSendingDuration = System.currentTimeMillis();
 
                         // Create a new file to save the received data
-                        File receivedFile = new File("received_file.png");
+                        File receivedFile = new File("received_file." + suffix);
                         try (BufferedOutputStream fileOutputStream = new BufferedOutputStream(new FileOutputStream(receivedFile))) {
                             for (int packetNumber = 1; packetNumber <= totalPackets; packetNumber++) {
 
@@ -125,6 +128,9 @@ public class Client {
                                 System.out.println("Received packet " + packetNumber + " of " + totalPackets);
                             }
                             System.out.println("File received successfully.");
+                            fileSendingDuration -= System.currentTimeMillis();
+                            message.add(new Message(username, "File received successfully in " + (-fileSendingDuration) + "ms"));
+                            fileSendingDuration = 0;
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -144,6 +150,7 @@ public class Client {
     public synchronized void sendClientFile(File file) {
         String msgPrefix = "FILE:";
         try (BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file))) {
+            String suffix = ":" + file.getPath().split("\\.")[file.getPath().split("\\.").length - 1];
             int maxPacketSize = udpSocket.getSendBufferSize() - 128;
             byte[] fileBuffer = new byte[maxPacketSize-128];
             System.out.println(fileBuffer.length);
@@ -151,8 +158,8 @@ public class Client {
             int totalPackets = (int) Math.ceil((double) fileSize / maxPacketSize);
 
             // Send total packets information
-            System.out.println("SEND: "+ msgPrefix + "TOTAL_PACKETS:"+ totalPackets);
-            sendClientMessage(msgPrefix + "TOTAL_PACKETS:" + totalPackets);
+            System.out.println("SEND: "+ msgPrefix + "TOTAL_PACKETS:"+ totalPackets + suffix);
+            sendClientMessage(msgPrefix + "TOTAL_PACKETS:" + totalPackets + suffix);
             wait(1);
 
             DatagramPacket packet;
@@ -196,6 +203,9 @@ public class Client {
             }
 
             System.out.println("File sent successfully.");
+            fileSendingDuration -= System.currentTimeMillis();
+            message.add(new Message(this.username, "File sent successfully in " + (-fileSendingDuration) + "ms"));
+            fileSendingDuration = 0;
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -223,8 +233,12 @@ public class Client {
                 for (String parts : Arrays.stream(sendArray).toList().subList(3, sendArray.length)) {
                     sendArray[2] += ":" + parts;
                 }
-            if (!msg.endsWith(":-connection_established--") && !msg.endsWith("CONNECTION_OK"))
+            if (!msg.endsWith(":-connection_established--") && !msg.endsWith("CONNECTION_OK") && !msgPrefix.equals("FILE:"))
                 message.add(new Message(this.username, sendArray[2]));
+            if (msgPrefix.equals("FILE:")) {
+                message.add(new Message(this.username, "Sending File..."));
+                fileSendingDuration = System.currentTimeMillis();
+            }
             udpSocket.send(packet);
 
             //buffer = msg.getBytes();
