@@ -8,4 +8,6 @@ module com.example.chats {
 
     opens GUI to javafx.fxml;
     exports GUI;
+    exports GUI.chatRequestPane;
+    opens GUI.chatRequestPane to javafx.fxml;
 }

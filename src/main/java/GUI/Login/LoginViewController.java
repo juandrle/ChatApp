@@ -34,6 +34,7 @@ public class LoginViewController extends ViewController<ChatApplication> {
         view.loginButton.setOnAction(this::loginHandler);
         view.password.setOnKeyPressed(this::loginHandler);
         view.username.setOnKeyPressed(this::loginHandler);
+
     }
 
     private void loginHandler(KeyEvent event) {
@@ -51,6 +52,7 @@ public class LoginViewController extends ViewController<ChatApplication> {
                 application.switchScene(Scenes.CHATPARTNER_VIEW);
             } else {
                 view.password.clear();
+                view.alertPane.alertLabel.setText(client.errMessageProperty().get());
                 animation();
             }
         } catch (IOException | InterruptedException ex) {

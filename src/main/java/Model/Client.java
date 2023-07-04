@@ -1,6 +1,7 @@
 package Model;
 
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -25,6 +26,8 @@ public class Client {
     InetAddress packetAddress;
     int packetPort;
     SimpleBooleanProperty requestReceived;
+    SimpleBooleanProperty requestAccepted;
+    SimpleStringProperty errMessage;
     String username;
     String password;
     Thread receiveMessages;
@@ -45,6 +48,8 @@ public class Client {
             e.printStackTrace();
         }
         requestReceived = new SimpleBooleanProperty(false);
+        requestAccepted = new SimpleBooleanProperty(false);
+        errMessage = new SimpleStringProperty();
 
     }
 
@@ -110,7 +115,6 @@ public class Client {
                         System.out.println(receivedArray[1]);
                     }
                     case "FILE" -> {
-                        System.out.println("Should receive File now :D");
                         int totalPackets = Integer.parseInt(received.split(":")[4]);
                         String suffix = received.split(":")[5];
                         fileSendingDuration = System.currentTimeMillis();
@@ -273,7 +277,6 @@ public class Client {
         switch (serverCmd) {
             case "REG_OK" -> {
                 System.out.println("Du bist mit dem Server verbunden!");
-                //dataOut.writeUTF("GET_CLIENTS");
                 sendServerMessage("GET_CLIENTS");
                 clientLoop();
                 return true;
@@ -281,6 +284,7 @@ public class Client {
             case "PASSWORD_INVALID" -> {
                 System.out.println("Passwort falsch bitte neu versuchen!");
                 System.out.println(userData);
+                errMessage.set("The password is invalid");
                 return false;
             }
             case "REG_NEW" -> {
@@ -289,6 +293,10 @@ public class Client {
                 sendServerMessage("GET_CLIENTS");
                 clientLoop();
                 return true;
+            }
+            case "ALREADY_ONLINE" -> {
+                errMessage.set("The user is already logged in");
+                return false;
             }
             default -> {
                 System.out.println(serverCmd);
@@ -334,7 +342,7 @@ public class Client {
                     }
                     case "REQUEST_ACCEPTED" -> {
                         System.out.println("starting chat!");
-                        //serverMesage = getServerMessage(socket);
+                        requestAccepted.set(true);
                         String chatPartnerPort = serverMessageArray[1].split(";")[0];
                         String chatPartnerIP = serverMessageArray[1].split(";")[1];
                         System.out.println(serverMessageArray[0] + serverMessageArray[1]);
@@ -343,11 +351,6 @@ public class Client {
                     }
                     case "CHAT_REQUEST" -> {
                         System.out.println("Chat Einladung erhalten! y: zum akzeptieren ODER n: zum ablehnen!");
-                        udpSocket = new DatagramSocket();
-                        //dataOut.writeUTF("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
-                        sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
-                        System.out.println("Starting chat!");
-                        startChatProtocol();
                         requestReceived.set(true);
                     }
                     case "EXIT_SUCCESSFUL" -> {
@@ -362,6 +365,17 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public void confirmChatRequest() throws IOException {
+        udpSocket = new DatagramSocket();
+        sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
+        startChatProtocol();
+        requestAccepted.set(true);
+        requestReceived.set(false);
+    }
+    public void declineChatRequest() throws IOException {
+        sendServerMessage("REQUEST_DENIED");
+        requestReceived.set(false);
     }
 
     public void userInputHandler() {
@@ -504,4 +518,11 @@ public class Client {
         sendServerMessage("EXIT");
     }
 
+    public SimpleBooleanProperty requestAcceptedProperty() {
+        return requestAccepted;
+    }
+
+    public SimpleStringProperty errMessageProperty() {
+        return errMessage;
+    }
 }

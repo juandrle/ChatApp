@@ -1,7 +1,5 @@
 package GUI.Chatpartner;
 
-import Model.Client;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -16,6 +14,7 @@ public class ChatpartnerView extends BorderPane {
         chatPartner.setId("clientList");
         VBox vBox = new VBox(chatPartner);
         setCenter(vBox);
+
         vBox.setId("background");
         setId("chatpartner");
     }

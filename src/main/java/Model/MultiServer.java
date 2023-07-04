@@ -157,6 +157,8 @@ public class MultiServer {
                     break;
                 }
             }
+            if (usernameClientMap.containsKey(username))
+                return "ALREADY_ONLINE";
             if (!isInList) {
                 writer.write(username + ";" + password + "\n");
                 System.out.println("gesendet regnew" + username + password);

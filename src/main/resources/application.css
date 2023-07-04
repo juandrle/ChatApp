@@ -224,3 +224,30 @@
     -fx-background-color: #5da65d;
     -fx-background-radius: 20;
 }
+#chatRequest {
+    -fx-background-color: rgba(240, 240, 240, 0.5);
+}
+#chatRequest .label {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+#chatRequest .button {
+    -fx-background-radius: 12;
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-pref-height: 30;
+    -fx-pref-width: 85;
+    -fx-text-fill: white;
+}
+#chatRequest #confirmButton {
+    -fx-background-color: #5da65d;
+}
+#chatRequest #confirmButton:hover {
+    -fx-background-color: #025b02;
+}
+#chatRequest #declineButton {
+    -fx-background-color: #d70101;
+}
+#chatRequest #declineButton:hover {
+    -fx-background-color: #8d0202;
+}
