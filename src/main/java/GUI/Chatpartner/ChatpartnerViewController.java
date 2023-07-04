@@ -61,10 +61,10 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
                             throw new RuntimeException(ex);
                         }
                     });
-                    setGraphic(hBox);
+                    Platform.runLater(()->setGraphic(hBox));
                     Platform.runLater(() -> connect.setTranslateX((200 - username.getWidth())));
 
-                } else setGraphic(null);
+                } else Platform.runLater(() -> setGraphic(null));
             }
         });
         view.chatPartner.setItems(client.getClients());
