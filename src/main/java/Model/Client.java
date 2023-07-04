@@ -71,6 +71,8 @@ public class Client {
 
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, partnerAddress, Integer.parseInt(port));
                 udpSocket.send(packet);
+
+
                 running = false;
                 startChatProtocol();
             }
@@ -102,15 +104,28 @@ public class Client {
                 System.out.println("RECEIVED: "+ received+ "PREFIX: "+ msgPrefix);
                 switch (msgPrefix) {
                     case "MESSAGE" -> {
+                        byte[] ackBytes = "ACK".getBytes();
+                        DatagramPacket ack = new DatagramPacket(ackBytes, ackBytes.length,packetAddress,packetPort);
+                        udpSocket.send(ack);
+                        System.out.println("ACK SEND");
+
+
                         String[] receivedArray = received.split(":");
                         String username = receivedArray[1];
                         if (receivedArray.length > 3)
                             for (String parts : Arrays.stream(receivedArray).toList().subList(3, receivedArray.length)) {
                                 receivedArray[2] += ":" + parts;
                             }
+
+
+                        System.out.println("Received packet");
                         if (received.endsWith(":-connection_established--")) sendClientMessage("MESSAGE:CONNECTION_OK");
                         if (!received.endsWith(":-connection_established--") && !received.endsWith("CONNECTION_OK"))
                             message.add(new Message(username, receivedArray[2]));
+
+
+
+
 
                         System.out.println(receivedArray[1]);
                     }
@@ -298,7 +313,7 @@ public class Client {
 
             //buffer = msg.getBytes();
 
-            for (int i = 1; i < totalPackets; i++) {
+            /*for (int i = 1; i < totalPackets; i++) {
                 System.out.println(i);
                 int offset = i * maxPacketSize;
                 int length = Math.min(maxPacketSize, messageBytes.length - offset);
@@ -307,9 +322,27 @@ public class Client {
 
                 packet = new DatagramPacket(buffer, buffer.length, packetAddress, packetPort);
                 udpSocket.send(packet);
+            }*/
+            if(!msg.endsWith("CONNECTION_OK")) {
+                boolean ackReceived = false;
+                while (!ackReceived) {
 
-
+                    try {
+                        //udpSocket.receive(packet);
+                        // Assuming the acknowledgment message is "ACK"
+                        String ackMessage = new String(ackPacket.getData(), 0, ackPacket.getLength());
+                        if (ackMessage.equals("ACK")) {
+                            System.out.println("Received acknowledgment for packet ");
+                            ackReceived = true;
+                        }
+                    } catch (Exception e) {
+                        // Error occurred while receiving acknowledgment, retry
+                        e.printStackTrace();
+                        System.err.println("Error receiving acknowledgment for packet. Retrying...");
+                    }
+                }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
