@@ -466,7 +466,7 @@ public class Client {
         return this.username;
     }
 
-    public void disconnnect() throws IOException {
+    public void disconnect() throws IOException {
         sendServerMessage("EXIT");
     }
 

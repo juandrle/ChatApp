@@ -58,6 +58,7 @@ public class ChatViewController extends ViewController<ChatApplication> {
         });
         client.getMessage().addListener((ListChangeListener<? super Message>) c -> {
             view.messageHistory.setItems(client.getMessage());
+            view.messageHistory.scrollTo(client.getMessage().size()-1);
         });
         view.messageArea.setOnKeyPressed(event -> {
             if (KeyCode.ENTER.equals(event.getCode())) {

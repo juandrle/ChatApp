@@ -3,7 +3,6 @@ package GUI.Options;
 
 import GUI.ChatApplication;
 import GUI.Scenes;
-import GUI.ViewController;
 import Model.Client;
 
 import java.io.IOException;
@@ -22,7 +21,7 @@ public class OptionsViewController {
     public void initialize() {
         view.logout.setOnAction(e -> {
             try {
-                client.disconnnect();
+                client.disconnect();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
