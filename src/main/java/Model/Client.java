@@ -151,6 +151,57 @@ public class Client {
 
     }
 
+    public void clientLoop() throws IOException {
+
+        Thread serverMessageHandler = new Thread(this::serverMessageHandler);
+        serverMessageHandler.start();
+        //Thread userInputHandler = new Thread(this::userInputHandler);
+        //userInputHandler.start();
+
+    }
+
+    public void serverMessageHandler() {
+        boolean connected = true;
+        try {
+            while (connected) {
+                serverMessageArray = getServerMessage(socket).split(" ");
+                serverMesage = serverMessageArray[0];
+                serverMessageArray[0] = "";
+                System.out.println("RECEIVED FROM SERVER: " + serverMesage);
+                switch (serverMesage.trim()) {
+                    case "CLIENT_LIST" -> {
+                        clients.clear();
+                        clients.addAll(Arrays.asList(serverMessageArray).subList(1, serverMessageArray.length - 1));
+                        clients.remove(username);
+                        System.out.println(clients);
+                    }
+                    case "REQUEST_ACCEPTED" -> {
+                        System.out.println("starting chat!");
+                        requestAccepted.set(true);
+                        String chatPartnerPort = serverMessageArray[1].split(";")[0];
+                        String chatPartnerIP = serverMessageArray[1].split(";")[1];
+                        System.out.println(serverMessageArray[0] + serverMessageArray[1]);
+
+                        startChatProtocol(chatPartnerPort, chatPartnerIP);
+                    }
+                    case "CHAT_REQUEST" -> {
+                        System.out.println("Chat Einladung erhalten! y: zum akzeptieren ODER n: zum ablehnen!");
+                        requestReceived.set(true);
+                    }
+                    case "EXIT_SUCCESSFUL" -> {
+                        socket.close();
+                        connected = false;
+                    }
+                    case "USER_NOT_FOUND" -> System.out.println("Benutzer nicht gefunden, bitte erneut eingeben!");
+                    case "REQUEST_DENIED" -> System.out.println("ABGELEHNT");
+                    default -> System.out.println(serverMesage);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    // GUI METHODS
     public synchronized void sendClientFile(File file) {
         String msgPrefix = "FILE:";
         try (BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file))) {
@@ -306,66 +357,6 @@ public class Client {
         return false;
     }
 
-    public static void main(String args[]) {
-        Client client = new Client(25655, "localhost");
-        try {
-            client.clientLoop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void clientLoop() throws IOException {
-
-        Thread serverMessageHandler = new Thread(this::serverMessageHandler);
-        serverMessageHandler.start();
-        Thread userInputHandler = new Thread(this::userInputHandler);
-        userInputHandler.start();
-
-    }
-
-
-    public void serverMessageHandler() {
-        boolean connected = true;
-        try {
-            while (connected) {
-                serverMessageArray = getServerMessage(socket).split(" ");
-                serverMesage = serverMessageArray[0];
-                serverMessageArray[0] = "";
-                System.out.println("RECEIVED FROM SERVER: " + serverMesage);
-                switch (serverMesage.trim()) {
-                    case "CLIENT_LIST" -> {
-                        clients.clear();
-                        clients.addAll(Arrays.asList(serverMessageArray).subList(1, serverMessageArray.length - 1));
-                        clients.remove(username);
-                        System.out.println(clients);
-                    }
-                    case "REQUEST_ACCEPTED" -> {
-                        System.out.println("starting chat!");
-                        requestAccepted.set(true);
-                        String chatPartnerPort = serverMessageArray[1].split(";")[0];
-                        String chatPartnerIP = serverMessageArray[1].split(";")[1];
-                        System.out.println(serverMessageArray[0] + serverMessageArray[1]);
-
-                        startChatProtocol(chatPartnerPort, chatPartnerIP);
-                    }
-                    case "CHAT_REQUEST" -> {
-                        System.out.println("Chat Einladung erhalten! y: zum akzeptieren ODER n: zum ablehnen!");
-                        requestReceived.set(true);
-                    }
-                    case "EXIT_SUCCESSFUL" -> {
-                        socket.close();
-                        connected = false;
-                    }
-                    case "USER_NOT_FOUND" -> System.out.println("Benutzer nicht gefunden, bitte erneut eingeben!");
-                    case "REQUEST_DENIED" -> System.out.println("ABGELEHNT");
-                    default -> System.out.println(serverMesage);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     public void confirmChatRequest() throws IOException {
         udpSocket = new DatagramSocket();
         sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
@@ -377,88 +368,6 @@ public class Client {
         sendServerMessage("REQUEST_DENIED");
         requestReceived.set(false);
     }
-
-    public void userInputHandler() {
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-            while (true) {
-                String[] eingabe = bufferedReader.readLine().split(" ");
-                switch (eingabe[0]) {
-                    case "!clients":
-                        sendServerMessage("GET_CLIENTS");
-                        break;
-
-                    case "!connect":
-                        sendServerMessage(eingabe[1]);
-
-                        break;
-
-                    case "y":
-                        if (requestReceived.get()) {
-                            udpSocket = new DatagramSocket();
-                            sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
-                            System.out.println("Starting chat!");
-                            startChatProtocol();
-                        }
-                        break;
-
-                    case "n":
-                        if (requestReceived.getValue()) {
-                            sendServerMessage("REQUEST_DENIED");
-                        }
-                        break;
-
-                    default:
-
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.print("Gib ein client ein zu dem du connecten willst!");
-        }
-    }
-
-    public void userConsoleLogin() {
-        boolean registerd = false;
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-        try {
-            System.out.println("Geben sie ihren Username ein!");
-            username = bufferedReader.readLine();
-            System.out.println("Geben sie ihr Passwort ein!");
-            password = bufferedReader.readLine();
-
-            String userData = username + ";" + password;
-            sendServerMessage(userData);
-
-
-            if (!registerd) {
-                while (!registerd) {
-                    switch (getServerMessage(socket).strip()) {
-                        case "REG_OK":
-                            System.out.println("Du bist mit dem Server verbunden!");
-                            registerd = true;
-                            break;
-
-                        case "PASSWORD_INVALID":
-                            System.out.println("Passwort falsch bitte neu versuchen!");
-                            password = bufferedReader.readLine();
-                            userData = username + ";" + password;
-                            sendServerMessage(userData);
-                            break;
-
-                        case "REG_NEW":
-                            System.out.println("Du wurdest als neue Benutzer angemeldet");
-                            registerd = true;
-                            break;
-                    }
-                }
-            }
-        } catch (IOException e) {
-
-        }
-    }
-
     public void connection(String username) throws IOException {
         DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
         try {
@@ -524,5 +433,95 @@ public class Client {
 
     public SimpleStringProperty errMessageProperty() {
         return errMessage;
+    }
+
+    // CONSOLE METHODS
+    public void userConsoleLogin() {
+        boolean registerd = false;
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            System.out.println("Geben sie ihren Username ein!");
+            username = bufferedReader.readLine();
+            System.out.println("Geben sie ihr Passwort ein!");
+            password = bufferedReader.readLine();
+
+            String userData = username + ";" + password;
+            sendServerMessage(userData);
+
+
+            if (!registerd) {
+                while (!registerd) {
+                    switch (getServerMessage(socket).strip()) {
+                        case "REG_OK":
+                            System.out.println("Du bist mit dem Server verbunden!");
+                            registerd = true;
+                            break;
+
+                        case "PASSWORD_INVALID":
+                            System.out.println("Passwort falsch bitte neu versuchen!");
+                            password = bufferedReader.readLine();
+                            userData = username + ";" + password;
+                            sendServerMessage(userData);
+                            break;
+
+                        case "REG_NEW":
+                            System.out.println("Du wurdest als neue Benutzer angemeldet");
+                            registerd = true;
+                            break;
+                    }
+                }
+            }
+        } catch (IOException e) {
+
+        }
+    }
+    public void userInputHandler() {
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+            while (true) {
+                String[] eingabe = bufferedReader.readLine().split(" ");
+                switch (eingabe[0]) {
+                    case "!clients":
+                        sendServerMessage("GET_CLIENTS");
+                        break;
+
+                    case "!connect":
+                        sendServerMessage(eingabe[1]);
+
+                        break;
+
+                    case "y":
+                        if (requestReceived.get()) {
+                            udpSocket = new DatagramSocket();
+                            sendServerMessage("REQUEST_ACCEPTED " + udpSocket.getLocalPort());
+                            System.out.println("Starting chat!");
+                            startChatProtocol();
+                        }
+                        break;
+
+                    case "n":
+                        if (requestReceived.getValue()) {
+                            sendServerMessage("REQUEST_DENIED");
+                        }
+                        break;
+
+                    default:
+
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.print("Gib ein client ein zu dem du connecten willst!");
+        }
+    }
+
+    public static void main(String args[]) {
+        Client client = new Client(25655, "localhost");
+        try {
+            client.clientLoop();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
