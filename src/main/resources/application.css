@@ -62,7 +62,7 @@
 
 #chatpartner #background {
     -fx-background-radius: 50;
-    -fx-background-color: #646464;
+    -fx-background-color: #494949;
     -fx-max-width: 450;
     -fx-max-height: 500;
     -fx-alignment: center;
@@ -73,7 +73,8 @@
     -fx-max-height: 400;
     -fx-max-width: 350;
     -fx-background-color: #646464;
-    -fx-border-color: #494949;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.1), 50, 0.5, 0.0, 0.0);
+
 }
 
 #chatpartner #clientCell:cell-selection {
@@ -83,7 +84,7 @@
 #chatpartner #clientCell {
     -fx-background-color: #646464;
     -fx-padding: 15;
-    -fx-border-color: #494949;
+
 }
 #chatpartner #clientCell .button {
     -fx-background-color: #5da65d;

@@ -331,6 +331,7 @@ public class Client {
                         //udpSocket.receive(packet);
                         // Assuming the acknowledgment message is "ACK"
                         String ackMessage = new String(ackPacket.getData(), 0, ackPacket.getLength());
+                       //udpSocket.setSoTimeout(3000);
                         if (ackMessage.equals("ACK")) {
                             System.out.println("Received acknowledgment for packet ");
                             ackReceived = true;

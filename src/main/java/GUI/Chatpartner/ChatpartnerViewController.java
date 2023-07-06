@@ -10,10 +10,12 @@ import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -47,13 +49,17 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
         view.chatPartner.setCellFactory(e -> new ListCell<>(){
             Label username = new Label("Dummy Name");
             Button connect = new Button("connect");
-            HBox hBox = new HBox(username, connect);
+            StackPane stackPane = new StackPane(username, connect);
+
             @Override
             protected void updateItem(String item, boolean empty) {
+
                 super.updateItem(item, empty);
                 setId("clientCell");
                 if (!empty) {
                     username.setText(item);
+                    StackPane.setAlignment(username, Pos.CENTER_LEFT);
+                    StackPane.setAlignment(connect, Pos.CENTER_RIGHT);
                     connect.setOnAction(e -> {
                         try {
                             client.connection(item.strip());
@@ -61,10 +67,10 @@ public class ChatpartnerViewController extends ViewController<ChatApplication> {
                             throw new RuntimeException(ex);
                         }
                     });
-                    Platform.runLater(()->setGraphic(hBox));
-                    Platform.runLater(() -> connect.setTranslateX((200 - username.getWidth())));
+                    setGraphic(stackPane);
+                    //connect.setTranslateX((200) - username.getPrefWidth());
 
-                } else Platform.runLater(() -> setGraphic(null));
+                } else  setGraphic(null);
             }
         });
         view.chatPartner.setItems(client.getClients());
